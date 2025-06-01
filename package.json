@@ -1,0 +1,25 @@
+{
+  "name": "teraoka-natsumi",
+  "version": "1.0.0",
+  "main": "bs-config.js",
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./assets/css/input.css -o ./assets/css/style.css --minify",
+    "watch:css": "tailwindcss -i ./assets/css/input.css -o ./assets/css/style.css --watch",
+    "bs": "browser-sync start --config bs-config.js",
+    "dev": "concurrently \"npm run watch:css\" \"npm run bs\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.4",
+    "@tailwindcss/postcss": "^4.1.4",
+    "browser-sync": "^3.0.4",
+    "concurrently": "^9.1.2",
+    "postcss": "^8.5.3"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21"
+  }
+}

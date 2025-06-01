@@ -1,0 +1,12 @@
+/* ./assets/css/input.css */
+@import "tailwindcss";
+
+/* 独自CSSのインポート（PostCSSで読み込む） */
+/* @import './custom/buttons.css'; */
+@layer components {
+  @import './custom/layout.css';
+}
+
+@theme {
+  --font-garamond: "Cormorant Garamond", serif;
+}

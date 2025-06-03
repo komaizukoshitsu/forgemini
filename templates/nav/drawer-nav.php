@@ -6,10 +6,11 @@
 $is_home = is_front_page();
 ?>
 
-<div class="home-drawer-nav px-5 lg:px-0 pt-[50px] lg:pt-0 pb-5 lg:pb-0 absolute bottom-0 lg:bottom-30 left-5 lg:left-20 right-[18px] lg:right-0 transition-opacity duration-200 ease-in-out z-[100]">
+<div class="home-drawer-nav fixed px-5 lg:px-0 pt-[50px] lg:pt-0 pb-5 lg:pb-0 bottom-0 lg:bottom-30 left-5 lg:left-20 right-[18px] lg:right-0 transition-opacity duration-200 ease-in-out z-[100] w-[90%] lg:w-[190px]">
+
   <div class="lg:hidden pb-7 flex justify-center">
     <a href="<?php bloginfo('url'); ?>">
-      <img class="lg:hidden w-auto h-auto max-w-[200px]" src="<?php echo get_template_directory_uri(); ?>/assets/image/logo.svg" alt="てらおか なつみ">
+      <img class="lg:hidden w-auto h-auto max-w-[200px]" src="<?php echo get_template_directory_uri(); ?>/assets/image/logo.svg" alt="てらおか なつみさん">
     </a>
 </div>
   <nav class="header-nav">

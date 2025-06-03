@@ -473,7 +473,7 @@ function initHeaderDrawer(forcedNamespace = null) { // 引数を受け取るよ�
             // まず、drawerNav の全ての表示/非表示関連クラスとスタイルを完全にリセット
             drawerNav.classList.remove(
                 'is-active', 'opacity-0', 'opacity-100', 'pointer-events-none', 'pointer-events-auto',
-                'hidden', 'block', 'left-full', 'translate-x-full', 'fixed', 'absolute', 'relative',
+                'hidden', 'block', 'left-full', 'translate-x-full', // 'fixed', 'absolute', 'relative' を削除
                 'inset-0', 'w-full', 'h-full', 'transform', 'transition'
             );
             drawerNav.style.cssText = '';
@@ -638,28 +638,94 @@ function updateHead(data) {
 // ----------------------------------------------------------------
 //     Barba.js 初期化 (関数定義)
 // ----------------------------------------------------------------
+let barbaInitialized = false; // Barba.jsが初期化済みかどうかのフラグ
 function setupBarba() {
+    if (barbaInitialized) {
+        console.warn('Barba.js は既に初期化されています。');
+        return;
+    }
+
     console.log('setupBarba 関数が呼び出されました！');
 
+    barba.use({ debug: true });
+
     barba.init({
+        views: [
+            {
+                namespace: 'home', // header.php で home と設定している名前空間
+                // Barba.js v2 では once フックでキャッシュを制御する
+                // once() {
+                //     barba.cache.add(this.namespace, false); // Home ページのキャッシュを無効化
+                // }
+                // または、Barba.js の設定自体でキャッシュをオフにする方法もあるが、
+                // 特定のビューで制御するのが最も柔軟です。
+                // ライフサイクル外でキャッシュを無効にする設定があれば検討
+            },
+            {
+                namespace: 'works-archive', // header.php で設定した名前空間
+                once() {
+                    barba.cache.delete(this.namespace); // works-archive のキャッシュを削除
+                },
+                leave() {
+                    barba.cache.delete(this.namespace); // ページを離れるときにキャッシュを削除
+                }
+            },
+            {
+                namespace: 'goods-archive', // header.php で設定した名前空間
+                once() {
+                    barba.cache.delete(this.namespace);
+                },
+                leave() {
+                    barba.cache.delete(this.namespace);
+                }
+            },
+            {
+                namespace: 'events-archive', // header.php で設定した名前空間
+                once() {
+                    barba.cache.delete(this.namespace);
+                },
+                leave() {
+                    barba.cache.delete(this.namespace);
+                }
+            },
+            // 'news-page' も必要であれば同様に設定
+            {
+                namespace: 'news-page',
+                once() {
+                    barba.cache.delete(this.namespace);
+                },
+                leave() {
+                    barba.cache.delete(this.namespace);
+                }
+            }
+        ],
         transitions: [{
             name: 'no-animation-fade',
-            leave() { /* ... */ },
-            enter() { /* ... */ },
+            leave({ current }) {
+                current.container.style.opacity = '0'; // フェードアウト
+                return Promise.resolve(); // 非同期処理が終わったことをBarbaに伝える
+            },
+            enter({ next }) {
+                next.container.style.opacity = '0'; // 最初は非表示
+                // 一旦DOMに追加されてから表示
+                setTimeout(() => {
+                    next.container.style.opacity = '1'; // フェードイン
+                }, 10); // 短い遅延
+                return Promise.resolve();
+            },
             before(data) {
                 console.log('--- Barba transition before フックが実行されました！ ---');
                 const prevDrawerNav = document.querySelector('.home-drawer-nav');
                 const prevHomeDrawer = document.querySelector('.home-drawer');
 
                 if (prevDrawerNav) {
+                    // ここでクリアするクラスを最小限にするか、必要なクラスはクリアしないように調整
                     prevDrawerNav.classList.remove(
                         'is-active', 'opacity-0', 'opacity-100', 'pointer-events-none', 'pointer-events-auto',
                         'hidden', 'block',
-                        'left-full', 'translate-x-full', 'fixed', 'absolute', 'relative',
-                        'inset-0', 'w-full', 'h-full', 'transform', 'transition'
+                        'left-full', 'translate-x-full'
                     );
-                    prevDrawerNav.style.cssText = '';
-                    console.log('Prev drawerNav styles and classes cleared.');
+                    console.log('Prev drawerNav styles and classes cleared (if any).');
                 }
                 if (prevHomeDrawer) {
                     prevHomeDrawer.style.cssText = '';
@@ -670,16 +736,73 @@ function setupBarba() {
                 console.log('--- Barba transition after フックが実行されました！ ---');
                 console.log('次のページのnamespace:', data.next.namespace);
 
-                initHeaderDrawer(data.next.namespace);
+                // Barba.js 遷移後、新しいDOMから home-drawer-nav を再取得
+                // data.next.container を使って新しいDOM内の要素を探す方が確実です
+                const homeDrawerNav = data.next.container.querySelector('.home-drawer-nav');
+                const homeDrawer = data.next.container.querySelector('.home-drawer');
 
+                if (homeDrawerNav) {
+                    // ドロワーが閉じていることを保証し、opacity/displayをリセット
+                    if (homeDrawerNav.classList.contains('is-active')) {
+                        homeDrawerNav.classList.remove('is-active');
+                    }
+                    homeDrawerNav.style.opacity = '';
+                    homeDrawerNav.style.pointerEvents = '';
+                    homeDrawerNav.style.display = '';
+
+                    // ページ遷移後に正しいTailwindクラスが確実に適用されるように、改めて追加する
+                    homeDrawerNav.classList.add(
+                        'fixed',
+                        'px-5', 'lg:px-0',
+                        'pt-[50px]', 'lg:pt-0',
+                        'pb-5', 'lg:pb-0',
+                        'bottom-[120px]',
+                        'right-[80px]',
+                        'left-auto',
+                        'transition-opacity', 'duration-200', 'ease-in-out',
+                        'z-[100]',
+                        'w-[90%]', 'lg:w-[190px]'
+                    );
+                    console.log('homeDrawerNav classes reapplied in after hook.');
+                }
+
+                // initHeaderDrawer は、これらの要素を再取得し、イベントリスナーを設定し直すことを期待
+                if (typeof initHeaderDrawer === 'function') {
+                    initHeaderDrawer(data.next.namespace);
+                } else {
+                    console.warn('initHeaderDrawer 関数が定義されていません。');
+                }
+
+                // ★★★ 呼び出し順序の変更: initAllScripts を一番最後に！ ★★★
+                // initFilterScripts は、フィルター関連の要素がDOMに存在することを前提とするため、
+                // initAllScripts の前に呼び出すべきです。
                 if (typeof initFilterScripts === 'function') {
                     initFilterScripts(data.next.namespace);
+                } else {
+                    console.warn('initFilterScripts 関数が定義されていません。');
                 }
-                initAllScripts();
 
-                // ★★★ ここを修正します！ data.next.namespace と data.next.html を渡します ★★★
-                console.log('Barba transition after: Calling updateBodyClasses with next HTML and namespace.');
-                updateBodyClasses(data.next.namespace, data.next.html); // <= 引数を追加！
+                // initAllScripts が他のスクリプトに依存しない、または他のスクリプトを再初期化する役割を持つなら最後に実行
+                if (typeof initAllScripts === 'function') {
+                    initAllScripts();
+                } else {
+                     console.warn('initAllScripts 関数が定義されていません。');
+                }
+
+                // data-page の更新ロジックをここに移動または呼び出し
+                const bodyElement = document.body;
+                const newNamespace = data.next.namespace;
+
+                if (newNamespace) {
+                    bodyElement.setAttribute('data-page', newNamespace);
+                } else {
+                    if (data.next.container.classList.contains('home')) {
+                        bodyElement.setAttribute('data-page', 'home');
+                    } else {
+                        bodyElement.setAttribute('data-page', 'subpage');
+                    }
+                }
+                console.log('Barba.js after hook: data-page set to', bodyElement.getAttribute('data-page'));
             },
         }],
         hooks: {
@@ -694,37 +817,40 @@ function setupBarba() {
             },
             after: ({ next }) => {
                 console.log('--- Barba global after フックが実行されました！ (もし発火すれば) ---');
-                // updateBodyClasses(); // ここはコメントアウトしたままでOKです
+                // ここはトランジションの after とは別に発火することがあります。
+                // data-page の更新はトランジションの after で行うのが確実です。
             }
         },
     });
 
-    console.log('barba.init の呼び出しが完了しました！ほげ');
+    console.log('barba.init の呼び出しが完了しました！');
 
     // Barba.js が初期化された直後（最初のページロード時）にもクラスをセット
-    console.log('setupBarba: Calling updateBodyClasses for initial load.');
-    // 初回ロード時は data.next.html がないので、namespace だけ渡すか、何も渡さない
-    updateBodyClasses(document.body.getAttribute('data-barba-namespace'));
+    console.log('setupBarba: Calling initHeaderDrawer for initial load.');
+    initHeaderDrawer(document.body.getAttribute('data-barba-namespace') || (document.body.classList.contains('home') ? 'home' : 'subpage')); // 初回ロード時の namespace を渡す
+    // updateBodyClasses の呼び出しは initHeaderDrawer の中で適切に行われるか、
+    // または Barba.js の before/after で制御するのが望ましい
 }
 
 // ----------------------------------------------------------------
 // updateBodyClasses() 関数の定義 (main.jsの他の場所、例えばsetupBarba関数より上に定義)// updateBodyClasses() 関数が引数を受け取れるように変更
 // ----------------------------------------------------------------
-function updateBodyClasses(barbaNamespace = null, nextHtmlString = null) { // 引数 barbaNamespace と nextHtmlString を追加
+function updateBodyClasses(barbaNamespace = null, nextHtmlString = null) {
     const body = document.body;
-    let newClasses = []; // 新しいbodyクラスを格納する配列
-    let currentNamespace; // 論理的なネームスペース
+    let newClasses = [];
+    let currentNamespace;
+
+    console.log('--- updateBodyClasses 実行開始 ---');
 
     if (barbaNamespace) {
-        currentNamespace = barbaNamespace; // Barbaフックから渡されたネームスペース
+        currentNamespace = barbaNamespace;
         console.log('updateBodyClasses: Barbaフックから渡されたnamespaceを使用:', currentNamespace);
     } else {
-        currentNamespace = body.getAttribute('data-barba-namespace') || 'home'; // 初回ロード時など、DOMから取得
+        currentNamespace = body.getAttribute('data-barba-namespace') || 'home';
         console.log('updateBodyClasses: DOMからnamespaceを取得:', currentNamespace);
     }
 
     if (nextHtmlString) {
-        // 次のページのHTML文字列をパースして、新しいbodyタグのクラスを取得
         const parser = new DOMParser();
         const doc = parser.parseFromString(nextHtmlString, 'text/html');
         const nextBodyClass = doc.body.className; // 次のページのbodyのクラス文字列
@@ -736,29 +862,49 @@ function updateBodyClasses(barbaNamespace = null, nextHtmlString = null) { // �
             console.log('updateBodyClasses: 次のページHTMLからbodyクラスを取得できませんでした。');
         }
     } else {
-        // nextHtmlString がない場合 (初回ロード時など) は、現在のbodyクラスから始める
         newClasses = Array.from(body.classList);
         console.log('updateBodyClasses: nextHtmlStringがないため、現在のbodyクラスから開始。');
     }
 
-    // まず、既存のhome/subpageクラスをリストから削除しておく
-    newClasses = newClasses.filter(cls => cls !== 'home' && cls !== 'subpage');
+    // no-scrollクラスを一時的に削除（これはスクロール問題用で残す）
+    body.classList.remove('no-scroll');
+    console.log('updateBodyClasses: no-scrollクラスを一時的に削除しました。');
 
-    // そして、現在のネームスペースに基づいて 'home' または 'subpage' を追加
+    // body要素の既存のクラスを一度完全にクリアする（これはWordPressとの競合回避のため維持）
+    body.className = '';
+    console.log('updateBodyClasses: 既存のbodyクラスを完全にクリアしました。');
+
+    // 次のページHTMLから取得したクラスを適用（no-scrollを除く）
+    newClasses.forEach(cls => {
+        if (cls && cls !== 'no-scroll') {
+            body.classList.add(cls);
+        }
+    });
+    console.log('updateBodyClasses: 次のページHTMLから取得したクラスを適用しました（no-scrollを除く）。');
+
+    // ★★★ ここからが変更点：data-page 属性を更新します ★★★
     if (currentNamespace === 'home') {
-        newClasses.push('home');
-        console.log('updateBodyClasses: 論理的なnamespaceに基づき "home" を追加。');
+        body.setAttribute('data-page', 'home');
+        console.log('updateBodyClasses: data-page 属性を "home" に設定。');
     } else { // Works ページなど
-        newClasses.push('subpage');
-        console.log('updateBodyClasses: 論理的なnamespaceに基づき "subpage" を追加。');
+        body.setAttribute('data-page', 'subpage');
+        console.log('updateBodyClasses: data-page 属性を "subpage" に設定。');
     }
 
-    // 最終的なクラスリストをbodyタグに適用
-    body.className = newClasses.join(' ');
+    // 強制的にoverflowを初期化（スクロール問題解決用で維持）
+    body.style.removeProperty('overflow');
+    body.style.removeProperty('overflow-x');
+    body.style.removeProperty('overflow-y');
+    console.log('updateBodyClasses: bodyのoverflowスタイルをより強力にリセットしました。');
+
+    document.documentElement.style.removeProperty('overflow');
+    document.documentElement.style.removeProperty('overflow-x');
+    document.documentElement.style.removeProperty('overflow-y');
+    console.log('updateBodyClasses: html要素のoverflowスタイルもリセットしました。');
 
     console.log('--- updateBodyClasses 実行終了 ---');
-    console.log('updateBodyClasses: 適用後のbodyクラス:', document.body.className);
-    console.log('updateBodyClasses: 適用後のbodyクラスリスト:', document.body.classList);
+    console.log('updateBodyClasses: 適用後のbodyクラス:', body.className); // ここはWordPressによって上書きされる可能性あり
+    console.log('updateBodyClasses: 適用後のdata-page:', body.getAttribute('data-page')); // data-pageの最終状態を確認
 }
 
 // ----------------------------------------------------------------

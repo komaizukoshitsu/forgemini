@@ -1,3 +1,5 @@
+// DEBUG: This is a test line. Delete later.
+console.log("main.js: A new line has been added to the top.");
 console.log('main.jsファイルが読み込まれました！');
 
 // ----------------------------------------------------------------
@@ -637,10 +639,9 @@ function updateHead(data) {
 //     Barba.js 初期化 (関数定義)
 // ----------------------------------------------------------------
 function setupBarba() {
-    console.log('setupBarba 関数が呼び出されました！'); // ★追加ログ1★
+    console.log('setupBarba 関数が呼び出されました！');
 
     barba.init({
-        // ★★★ ここから transitions の定義が始まる ★★★
         transitions: [{
             name: 'no-animation-fade',
             leave() { /* ... */ },
@@ -675,14 +676,15 @@ function setupBarba() {
                     initFilterScripts(data.next.namespace);
                 }
                 initAllScripts();
+
+                // ★★★ ここを修正します！ data.next.namespace と data.next.html を渡します ★★★
+                console.log('Barba transition after: Calling updateBodyClasses with next HTML and namespace.');
+                updateBodyClasses(data.next.namespace, data.next.html); // <= 引数を追加！
             },
         }],
-        // ★★★ transitions の定義はここまで ★★★
-
-        // ★★★ ここから hooks の定義が始まる (transitions と同じ階層) ★★★
         hooks: {
             before: (data) => {
-                console.log('--- Barba global before フックが実行されました！ ---'); // このログが表示されるはず
+                console.log('--- Barba global before フックが実行されました！ ---');
                 const link = data.trigger;
                 if (link && link.tagName === 'A' && link.closest('footer')) {
                     console.log('Barba.js: フッターナビのリンクをインターセプトしました:', link.href);
@@ -691,54 +693,72 @@ function setupBarba() {
                 }
             },
             after: ({ next }) => {
-                console.log('--- Barba global after フックが実行されました！ ---'); // ★★★ このログが一番重要！これが出ればOK ★★★
-                updateBodyClasses(); // bodyクラスを更新
+                console.log('--- Barba global after フックが実行されました！ (もし発火すれば) ---');
+                // updateBodyClasses(); // ここはコメントアウトしたままでOKです
             }
         },
-        // ★★★ hooks の定義はここまで ★★★
-
-        // ★★★ ここにあった prevent: { sameUrl: false } または prevent: function(...) を完全に削除します ★★★
     });
 
-    console.log('barba.init の呼び出しが完了しました！'); // ★追加ログ2★
+    console.log('barba.init の呼び出しが完了しました！ほげ');
 
     // Barba.js が初期化された直後（最初のページロード時）にもクラスをセット
-    console.log('setupBarba: Calling updateBodyClasses for initial load.'); // このログも出るはず
-    updateBodyClasses();
+    console.log('setupBarba: Calling updateBodyClasses for initial load.');
+    // 初回ロード時は data.next.html がないので、namespace だけ渡すか、何も渡さない
+    updateBodyClasses(document.body.getAttribute('data-barba-namespace'));
 }
 
 // ----------------------------------------------------------------
-// updateBodyClasses() 関数の定義 (main.jsの他の場所、例えばsetupBarba関数より上に定義)
+// updateBodyClasses() 関数の定義 (main.jsの他の場所、例えばsetupBarba関数より上に定義)// updateBodyClasses() 関数が引数を受け取れるように変更
 // ----------------------------------------------------------------
-function updateBodyClasses() {
-    let currentNamespace = 'default';
+function updateBodyClasses(barbaNamespace = null, nextHtmlString = null) { // 引数 barbaNamespace と nextHtmlString を追加
+    const body = document.body;
+    let newClasses = []; // 新しいbodyクラスを格納する配列
+    let currentNamespace; // 論理的なネームスペース
 
-    const barbaContainer = document.querySelector('[data-barba="container"]');
-    if (barbaContainer && barbaContainer.dataset.barbaNamespace) {
-        currentNamespace = barbaContainer.dataset.barbaNamespace;
-    } else if (document.body.dataset.barbaNamespace) { // フォールバック（通常は使われないはず）
-        currentNamespace = document.body.dataset.barbaNamespace;
-    }
-
-    let classToAdd = '';
-    if (currentNamespace === 'home') {
-        classToAdd = 'home';
-    } else if (currentNamespace === 'works' || currentNamespace === 'works-archive' || currentNamespace === 'works-single') {
-        classToAdd = 'subpage';
+    if (barbaNamespace) {
+        currentNamespace = barbaNamespace; // Barbaフックから渡されたネームスペース
+        console.log('updateBodyClasses: Barbaフックから渡されたnamespaceを使用:', currentNamespace);
     } else {
-        classToAdd = 'subpage';
+        currentNamespace = body.getAttribute('data-barba-namespace') || 'home'; // 初回ロード時など、DOMから取得
+        console.log('updateBodyClasses: DOMからnamespaceを取得:', currentNamespace);
     }
 
-    document.body.classList.remove('home', 'subpage');
-    if (classToAdd) {
-        document.body.classList.add(classToAdd);
+    if (nextHtmlString) {
+        // 次のページのHTML文字列をパースして、新しいbodyタグのクラスを取得
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(nextHtmlString, 'text/html');
+        const nextBodyClass = doc.body.className; // 次のページのbodyのクラス文字列
+
+        if (nextBodyClass) {
+            newClasses = nextBodyClass.split(' ').filter(cls => cls.trim() !== '');
+            console.log('updateBodyClasses: 次のページHTMLから取得した元のクラス:', newClasses);
+        } else {
+            console.log('updateBodyClasses: 次のページHTMLからbodyクラスを取得できませんでした。');
+        }
+    } else {
+        // nextHtmlString がない場合 (初回ロード時など) は、現在のbodyクラスから始める
+        newClasses = Array.from(body.classList);
+        console.log('updateBodyClasses: nextHtmlStringがないため、現在のbodyクラスから開始。');
     }
 
-    console.log(`--- updateBodyClasses 実行開始 ---`);
-    console.log(`現在のネームスペース: ${currentNamespace}`);
-    console.log(`追加しようとしているクラス: ${classToAdd}`);
-    console.log(`最終的なbodyクラス:`, document.body.classList);
-    console.log(`--- updateBodyClasses 実行終了 ---`);
+    // まず、既存のhome/subpageクラスをリストから削除しておく
+    newClasses = newClasses.filter(cls => cls !== 'home' && cls !== 'subpage');
+
+    // そして、現在のネームスペースに基づいて 'home' または 'subpage' を追加
+    if (currentNamespace === 'home') {
+        newClasses.push('home');
+        console.log('updateBodyClasses: 論理的なnamespaceに基づき "home" を追加。');
+    } else { // Works ページなど
+        newClasses.push('subpage');
+        console.log('updateBodyClasses: 論理的なnamespaceに基づき "subpage" を追加。');
+    }
+
+    // 最終的なクラスリストをbodyタグに適用
+    body.className = newClasses.join(' ');
+
+    console.log('--- updateBodyClasses 実行終了 ---');
+    console.log('updateBodyClasses: 適用後のbodyクラス:', document.body.className);
+    console.log('updateBodyClasses: 適用後のbodyクラスリスト:', document.body.classList);
 }
 
 // ----------------------------------------------------------------

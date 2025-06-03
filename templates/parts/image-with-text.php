@@ -5,23 +5,30 @@ $mt_below_class = $args['mt_below'] ?? 'mt-4 lg:mt-5';
 $aspect_ratio = $args['aspect_ratio'] ?? 'aspect-square';
 $template_context = $args['template_context'] ?? 'default';
 
-// 投稿タイプを取得 (これはそのまま残します)
+// 投稿タイプを取得
 $post_type = get_post_type();
 
-// ★ここが重要な修正点★
+// ★ここを修正・追加★
+// filter_posts_by_custom_type_and_taxonomy から渡される data_tags を受け取る
+$data_tags = $args['data_tags'] ?? '';
+
 // template_context が明示的に渡された場合はそれを優先し、
 // そうでなければ通常の投稿タイプを $template_name とする
 if (!empty($template_context) && $template_context !== 'default') {
-    $template_name = $template_context; // 'news' がここに入る
+    $template_name = $template_context; // 'news' などがここに入る
 } elseif ($template_context === 'top') {
     $template_name = 'top';
 } else {
     $template_name = $post_type; // 通常の投稿タイプ (例: 'post', 'goods' など)
 }
 
+// 投稿タイプに応じたクラス名を生成 (例: work-item, goods-item, post-item)
+// JavaScriptでフィルタリング対象として認識するために必要です。
+$item_class = sanitize_html_class($post_type) . '-item';
+
 ?>
 
-<article class="w-full">
+<article class="w-full <?php echo esc_attr($item_class); ?>" data-tags="<?php echo esc_attr($data_tags); ?>">
     <a href="<?php the_permalink(); ?>" class="block group">
         <div class="relative overflow-hidden <?php echo esc_attr($rounded_class); ?> <?php echo esc_attr($aspect_ratio); ?>">
             <div class="w-full overflow-hidden <?php echo esc_attr($rounded_class); ?> <?php echo esc_attr($aspect_ratio); ?>">

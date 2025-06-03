@@ -11,11 +11,11 @@ $additional_class = $args['class'] ?? '';
     foreach ($sns as $icon):
   ?>
     <a href="#" class="<?php echo "$bg_base $hover_bg"; ?> rounded-full transition-colors duration-200
-      w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
+      w-8 h-8 lg:w-10 lg:h-10 flex items-center justify-center">
       <img
         src="<?php echo get_template_directory_uri(); ?>/assets/image/sns-<?php echo $icon; ?>-icon.svg"
         alt="<?php echo ucfirst($icon); ?>"
-        class="w-9 h-8 sm:w-10 sm:h-10"
+        class="w-9 h-8 lg:w-10 lg:h-10"
       />
     </a>
   <?php endforeach; ?>

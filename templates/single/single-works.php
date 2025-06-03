@@ -1,4 +1,4 @@
-<main data-barba="container" data-barba-namespace="single">
+<main data-barba="container" data-barba-namespace="works-single">
     <div class="mt-17">
         <div class="w-[90%] mx-auto xl:max-w-180">
             <a href="<?php bloginfo('url'); ?>/works"
@@ -17,8 +17,11 @@
                     <div class="ml-2 lg:ml-3 pl-2 lg:pl-3 border-l border-[#D9D9D9]">
                         <?php
                             $tags = get_the_tags();
-                            foreach ( $tags as $tag ) {
-                                echo '<span>' . $tag->name . '</span>';
+                            // ★修正点: $tags が配列であり、かつ空ではないことを確認する
+                            if ( $tags && ! is_wp_error( $tags ) && is_array( $tags ) && ! empty( $tags ) ) {
+                                foreach ( $tags as $tag ) {
+                                    echo '<span>' . esc_html( $tag->name ) . '</span>'; // ★セキュリティ強化: エスケープ処理を追加
+                                }
                             }
                         ?>
                     </div>

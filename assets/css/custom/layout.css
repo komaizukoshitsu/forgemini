@@ -156,7 +156,7 @@ img {
 
 /* トップページのみ背景色を表示 */
 /* PCでのスタイル（ホームページ） */
-body.home .home-drawer-nav::after {
+body[data-page="home"] .home-drawer-nav::after {
   content: '';
   background-color: #FFFAD1;
   position: absolute;
@@ -171,14 +171,16 @@ body.home .home-drawer-nav::after {
 }
 
 /* 下層ページでは背景非表示 */
-body:not(.home) .home-drawer-nav::after {
+/* ここが body[data-page="subpage"]  のように修正したクラス名になるはず */
+body[data-page="subpage"]  .home-drawer-nav::after {
+  /* body:not(.home) の代わりに body[data-page="subpage"]  を使う */
   display: none;
   content: none;
 }
 
 /* スマホ用の背景表示（PCと同じ背景色） */
 @media (max-width: 1024px) {
-  body.home .home-drawer-nav::after {
+  body[data-page="home"] .home-drawer-nav::after {
     top: 0;
     left: 0;
     right: 0;
@@ -186,7 +188,9 @@ body:not(.home) .home-drawer-nav::after {
     border-radius: 20px 20px 0 0;
   }
 
-  body:not(.home) .home-drawer-nav::after {
+  /* ここも body[data-page="subpage"]  のように修正 */
+  body[data-page="subpage"]  .home-drawer-nav::after {
+    /* body:not(.home) の代わりに body[data-page="subpage"]  を使う */
     display: block;
     content: "";
     background-color: #FFFAD1;
@@ -195,7 +199,8 @@ body:not(.home) .home-drawer-nav::after {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;border-radius: 20px 20px 0 0;
+    bottom: 0;
+    border-radius: 20px 20px 0 0;
   }
 }
 
@@ -206,37 +211,32 @@ body:not(.home) .home-drawer-nav::after {
   display: none;
 } */
 
-/* 開閉アニメーションの基本設定 */
-.home-drawer-nav {
-  /* opacityとpointer-eventsのtransitionはそのまま維持 */
-  transition-property: opacity;
-  transition-duration: 0.2s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  /* その他の位置やサイズに関するスタイルは維持 */
-  /* 例: absolute bottom-0 lg:bottom-30 left-5 lg:left-20 right-[18px] lg:right-0 z-[100] */
-}
-
 /* メニューが閉じている状態（初期状態、またはクリックで閉じた状態） */
-/* opacityは0だが、displayはblockにしてトランジションを有効にする */
-/* しかし、ユーザーに見せない、クリックさせないために pointer-events: none; と height: 0; を併用 */
 .home-drawer-nav:not(.is-active) {
   opacity: 0;
   pointer-events: none;
-  /* height: 0; や max-height: 0; を設定して見えないようにする */
-  max-height: 0;
-  /* これで要素の高さをゼロにして見えないようにする */
-  overflow: hidden;
-  /* 高さがゼロのときに内容がはみ出さないように */
-  /* display: none; は使わない */
+  display: none;
+  /* 追加：要素自体を非表示にする */
 }
 
 /* メニューが開いている状態 */
 .home-drawer-nav.is-active {
   opacity: 1;
   pointer-events: auto;
-  max-height: 1000px;
-  /* 十分に大きい値を設定して内容が表示されるようにする */
-  /* display: block; は使わない (CSSのデフォルトに任せる) */
+  /* max-height は不要になりますが、transition と組み合わせて
+     アニメーションさせたい場合は別途検討が必要です。
+     一旦、display: block; で表示させます。 */
+  display: block;
+  /* 追加：要素を表示する */
+}
+
+/* 開閉アニメーションの基本設定 */
+.home-drawer-nav {
+  /* opacityとpointer-eventsのtransitionはそのまま維持 */
+  transition-property: opacity;
+  transition-duration: 0.2s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  /* heightやmax-heightのトランジションは削除するか、必要に応じて調整 */
 }
 
 .header-nav-item a {

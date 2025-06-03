@@ -4,7 +4,7 @@ global $top_page_excluded_event_ids;
 $top_page_excluded_event_ids = [];
 ?>
 
-<main data-barba="container">
+<main data-barba="container" data-barba-namespace="home">
     <section class="relative overflow-hidden h-[100svh]">
         <div id="hero" class="fixed top-0 left-0 w-full h-[100svh] overflow-hidden transition-opacity duration-500 ease-in-out opacity-100 -z-1">
             <img class="pc-only hidden lg:block w-full h-full object-cover" src="<?php the_field('mv-img'); ?>" alt="ヒーローイメージ">

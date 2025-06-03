@@ -50,7 +50,7 @@ if (!array_key_exists($current_ym_for_select, $month_set) && !empty($month_list)
 }
 ?>
 
-<main data-barba="container" data-barba-namespace="events">
+<main data-barba="container" data-barba-namespace="events-archive">
     <div class="flex flex-row justify-between items-center lg:ml-[25%] lg:mr-[7.5%] mt-16">
         <div class="w-full lg:w-auto">
             <?php

@@ -1,6 +1,6 @@
 <?php get_header(); ?>
 
-<main data-barba="container" data-barba-namespace="archive">
+<main data-barba="container" data-barba-namespace="goods-archive">
     <div class="flex flex-row justify-between items-center xl:ml-[25%] xl:mr-[7.5%] mt-16">
         <div class="w-full lg:w-auto">
             <?php

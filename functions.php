@@ -60,207 +60,202 @@ function my_archive_title($title) {
 };
 add_filter('get_the_archive_title', 'my_archive_title');
 
-
-
+//修正後です
 // =================================================================
 //     汎用的なAjaxフィルター関数（works と goods などで使用）
 // =================================================================
 
 function filter_posts_by_custom_type_and_taxonomy() {
-  $post_type_slug = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : '';
-  $tag_slug       = isset($_POST['tag']) ? sanitize_text_field($_POST['tag']) : '';
-  $paged          = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-  // 月パラメータはイベント専用なので、ここでは使わない
+    $post_type_slug = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : '';
+    $tag_slug       = isset($_POST['tag']) ? sanitize_text_field($_POST['tag']) : '';
+    // JavaScriptから直接タクソノミー名を受け取る
+    $query_taxonomy = isset($_POST['taxonomy']) ? sanitize_text_field($_POST['taxonomy']) : '';
+    $paged          = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
 
-  // 各カスタム投稿タイプと、それに紐付けられたタグタクソノミーをマッピング
-  // ★ここはあなたのサイトの設定に合わせて正確に記述してください★
-  $taxonomy_map = [
-      'works'  => 'works_category',
-      'goods'  => 'goods_category',
-      'events' => 'event_category',
-      'post'   => 'category', // 標準投稿用
-  ];
+    // 無効な投稿タイプやタクソノミーが指定された場合はエラーで終了
+    if (empty($post_type_slug) || empty($query_taxonomy)) {
+        wp_send_json_error( 'Missing post type or taxonomy for generic filter.' );
+        wp_die();
+    }
 
-  $query_post_type = 'post';
-  $query_taxonomy  = 'category';
+    $args = array(
+        'post_type'      => $post_type_slug, // JavaScriptから渡された投稿タイプを直接使用
+        'posts_per_page' => 8,
+        'paged'          => $paged,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'tax_query'      => array(),
+    );
 
-  if (array_key_exists($post_type_slug, $taxonomy_map)) {
-      $query_post_type = $post_type_slug;
-      $query_taxonomy  = $taxonomy_map[$post_type_slug];
-  } else {
-      // 不正な投稿タイプが指定された場合はエラーで終了
-      wp_send_json_error( 'Invalid post type specified for generic filter.' );
-      wp_die();
+    // タグ指定 ('すべて' 以外)
+    if (!empty($tag_slug) && $tag_slug !== 'all') {
+        $args['tax_query'][] = array(
+            'taxonomy' => $query_taxonomy, // JavaScriptから渡されたタクソノミーを直接使用
+            'field'    => 'slug',
+            'terms'    => $tag_slug,
+        );
+    }
+
+    $the_query = new WP_Query($args);
+
+    if ($the_query->have_posts()) {
+        ob_start();
+        echo '<div class="grid grid-cols-2 lg:grid-cols-4 mt-5 lg:mt-15 gap-x-2 gap-y-6 lg:gap-x-9 lg:gap-y-15">';
+        while ($the_query->have_posts()) {
+            $the_query->the_post();
+
+            // 各カスタム投稿タイプのタクソノミータームを取得
+            $tag_terms = wp_get_post_terms(get_the_ID(), $query_taxonomy, ['fields' => 'slugs']);
+            $tag_slugs_str = implode(',', $tag_terms);
+
+            // templates/parts/image-with-text.php に data-tags 属性として渡す
+            get_template_part('templates/parts/image-with-text', null, array(
+                'rounded'    => 'lg:rounded-[20px]',
+                'mt_below'   => 'mt-2 lg:mt-5',
+                'data_tags'  => esc_attr($tag_slugs_str), // data-tags 属性として渡す
+                'post_type'  => $post_type_slug // 必要であれば、テンプレートパーツ内で投稿タイプを識別するために渡す
+            ));
+        }
+        echo '</div>';
+        wp_reset_postdata();
+        echo ob_get_clean();
+    } else {
+        echo '<p class="mt-10 text-center text-sm text-gray-500">投稿が見つかりませんでした。</p>';
+    }
+
+    wp_die();
+  }
+  add_action('wp_ajax_filter_posts_by_custom_type_and_taxonomy', 'filter_posts_by_custom_type_and_taxonomy');
+  add_action('wp_ajax_nopriv_filter_posts_by_custom_type_and_taxonomy', 'filter_posts_by_custom_type_and_taxonomy');
+
+
+  // =================================================================
+  // イベント専用のAjaxフィルター関数（archive-events.php で使用）
+  // =================================================================
+  function get_event_months_for_archive($start_date_str, $end_date_str) {
+    $months = [];
+
+    // 日付文字列が有効であることを確認
+    if (empty($start_date_str) || empty($end_date_str)) {
+        return $months;
+    }
+
+    try {
+        // YYYYMMDD 形式から DateTime オブジェクトへ変換
+        $start = new DateTime($start_date_str);
+        $end = new DateTime($end_date_str);
+    } catch (Exception $e) {
+        // 日付形式が無効な場合のハンドリング
+        error_log("Date parsing error in get_event_months_for_archive: " . $e->getMessage());
+        return $months;
+    }
+
+    // 終了日はその月の末日までを含むように調整し、ループ条件に合わせる
+    // 終了日の次月の1日までループすることで、終了日を含む月も確実に取得する
+    $end->modify('first day of next month');
+
+    while ($start < $end) {
+        $months[] = $start->format('Y-m'); // YYYY-MM 形式で追加
+        $start->modify('first day of next month');
+    }
+
+    return array_unique($months); // 重複を削除
   }
 
-  $args = array(
-      'post_type'      => $query_post_type,
-      'posts_per_page' => 8,
-      'paged'          => $paged,
-      'orderby'        => 'date',
-      'order'          => 'DESC',
-      'tax_query'      => array(),
-  );
 
-  // タグ指定 ('すべて' 以外)
-  if (!empty($tag_slug) && $tag_slug !== 'all') {
-      $args['tax_query'][] = array(
-          'taxonomy' => $query_taxonomy,
-          'field'    => 'slug',
-          'terms'    => $tag_slug,
-      );
+  function filter_events_by_month_and_tag() {
+    $tag = isset($_POST['tag']) ? sanitize_text_field($_POST['tag']) : '';
+    $month = isset($_POST['month']) ? sanitize_text_field($_POST['month']) : '';
+    $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
+
+    $query_post_type = 'events';
+    $query_taxonomy  = 'event_type'; // イベントのタグタクソノミースラッグに修正済み
+
+    $args = array(
+        'post_type'      => $query_post_type,
+        'posts_per_page' => 8, // 必要に応じて調整
+        'paged'          => $paged,
+        'orderby'        => 'meta_value', // イベント開始日でソート
+        'meta_key'       => 'event-start', // ソートキー
+        'order'          => 'ASC', // 昇順
+        'tax_query'      => array(),
+        'meta_query'     => array(),
+    );
+
+    // タグ指定 ('すべて' 以外)
+    if (!empty($tag) && $tag !== 'all') {
+        $args['tax_query'][] = array(
+            'taxonomy' => $query_taxonomy,
+            'field'    => 'slug',
+            'terms'    => $tag,
+        );
+    }
+
+    // 月指定（例：202504）
+    if (!empty($month) && $month !== 'all') {
+        $year = substr($month, 0, 4);
+        $mon = substr($month, 4, 2);
+
+        // 日付の比較ロジックを修正
+        // イベントの期間が指定月に「含まれる」イベントを取得する
+        // 具体的には、イベントの開始日が指定月の最終日以前、かつイベントの終了日が指定月の1日以降
+        $args['meta_query'] = array(
+            'relation' => 'AND',
+            array(
+                'key'     => 'event-start',
+                'value'   => $year . $mon . date('t', strtotime("$year-$mon-01")), // 指定月の最終日 (例: 20250430)
+                'compare' => '<=', // 開始日が指定月の最終日以前
+                'type'    => 'NUMERIC', // YYYYMMDDは数値として比較
+            ),
+            array(
+                'key'     => 'event-end',
+                'value'   => $year . $mon . '01', // 指定月の1日 (例: 20250401)
+                'compare' => '>=', // 終了日が指定月の1日以降
+                'type'    => 'NUMERIC', // YYYYMMDDは数値として比較
+            ),
+        );
+    }
+
+    $the_query = new WP_Query($args);
+
+    if ($the_query->have_posts()) {
+        ob_start();
+        $template_slug_base = 'filtered-items-event';
+
+        while ($the_query->have_posts()) {
+            $the_query->the_post();
+
+            // テンプレートパーツに渡す変数を準備
+            $tag_terms = wp_get_post_terms(get_the_ID(), 'event_type', ['fields' => 'slugs']);
+            $tag_slugs_str = implode(',', $tag_terms);
+
+            $start_date_field = get_field('event-start', get_the_ID());
+            $end_date_field   = get_field('event-end', get_the_ID());
+            $event_months = get_event_months_for_archive($start_date_field, $end_date_field);
+            $months_str = implode(',', $event_months);
+
+            // get_template_part の第三引数で変数を渡すように修正
+            get_template_part(
+                'templates/parts/' . $template_slug_base,
+                null,
+                [
+                    'months_str' => esc_attr($months_str),
+                    'tag_slugs'  => esc_attr($tag_slugs_str),
+                ]
+            );
+        }
+        wp_reset_postdata();
+        echo ob_get_clean();
+    } else {
+        echo '<p class="text-sm lg:text-base leading-[1.4] px-3 lg:px-4  -pl-4 pb-4 lg:pb-6 border-b border-[#D9D9D9]">表示可能なイベントが見つかりませんでした。</p>';
+    }
+
+    wp_die();
   }
+  add_action('wp_ajax_filter_events_by_month_and_tag', 'filter_events_by_month_and_tag');
+  add_action('wp_ajax_nopriv_filter_events_by_month_and_tag', 'filter_events_by_month_and_tag');
 
-  $the_query = new WP_Query($args);
-
-  if ($the_query->have_posts()) {
-      ob_start();
-      echo '<div class="grid grid-cols-2 lg:grid-cols-4 mt-5 lg:mt-15 gap-x-2 gap-y-6 lg:gap-x-9 lg:gap-y-15">';
-      while ($the_query->have_posts()) {
-          $the_query->the_post();
-          get_template_part('templates/parts/image-with-text', null, array(
-              'rounded' => 'lg:rounded-[20px]',
-              'mt_below' => 'mt-2 lg:mt-5'
-          ));
-      }
-      echo '</div>';
-      wp_reset_postdata();
-      echo ob_get_clean();
-  } else {
-      echo '<p class="mt-10 text-center text-sm text-gray-500">投稿が見つかりませんでした。</p>';
-  }
-
-  wp_die();
-}
-add_action('wp_ajax_filter_posts_by_custom_type_and_taxonomy', 'filter_posts_by_custom_type_and_taxonomy');
-add_action('wp_ajax_nopriv_filter_posts_by_custom_type_and_taxonomy', 'filter_posts_by_custom_type_and_taxonomy');
-
-
-// =================================================================
-// イベント専用のAjaxフィルター関数（archive-events.php で使用）
-// =================================================================
-function get_event_months_for_archive($start_date_str, $end_date_str) {
-  $months = [];
-
-  // 日付文字列が有効であることを確認
-  if (empty($start_date_str) || empty($end_date_str)) {
-      return $months;
-  }
-
-  try {
-      // YYYYMMDD 形式から DateTime オブジェクトへ変換
-      $start = new DateTime($start_date_str);
-      $end = new DateTime($end_date_str);
-  } catch (Exception $e) {
-      // 日付形式が無効な場合のハンドリング
-      error_log("Date parsing error in get_event_months_for_archive: " . $e->getMessage());
-      return $months;
-  }
-
-  // 終了日はその月の末日までを含むように調整し、ループ条件に合わせる
-  // 終了日の次月の1日までループすることで、終了日を含む月も確実に取得する
-  $end->modify('first day of next month');
-
-  while ($start < $end) {
-      $months[] = $start->format('Y-m'); // YYYY-MM 形式で追加
-      $start->modify('first day of next month');
-  }
-
-  return array_unique($months); // 重複を削除
-}
-
-
-function filter_events_by_month_and_tag() {
-  $tag = isset($_POST['tag']) ? sanitize_text_field($_POST['tag']) : '';
-  $month = isset($_POST['month']) ? sanitize_text_field($_POST['month']) : '';
-  $paged = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-
-  $query_post_type = 'events';
-  $query_taxonomy  = 'event_type'; // ★イベントのタグタクソノミースラッグに修正済み
-
-  $args = array(
-      'post_type'      => $query_post_type,
-      'posts_per_page' => 8, // 必要に応じて調整
-      'paged'          => $paged,
-      'orderby'        => 'meta_value', // ★イベント開始日でソート
-      'meta_key'       => 'event-start', // ★ソートキー
-      'order'          => 'ASC', // ★昇順
-      'tax_query'      => array(),
-      'meta_query'     => array(),
-  );
-
-  // タグ指定 ('すべて' 以外)
-  if (!empty($tag) && $tag !== 'all') {
-      $args['tax_query'][] = array(
-          'taxonomy' => $query_taxonomy,
-          'field'    => 'slug',
-          'terms'    => $tag,
-      );
-  }
-
-  // 月指定（例：202504）
-  if (!empty($month) && $month !== 'all') {
-      $year = substr($month, 0, 4);
-      $mon = substr($month, 4, 2);
-
-      // ★日付の比較ロジックを修正
-      // イベントの期間が指定月に「含まれる」イベントを取得する
-      // 具体的には、イベントの開始日が指定月の最終日以前、かつイベントの終了日が指定月の1日以降
-      $args['meta_query'] = array(
-          'relation' => 'AND',
-          array(
-              'key'     => 'event-start',
-              'value'   => $year . $mon . date('t', strtotime("$year-$mon-01")), // 指定月の最終日 (例: 20250430)
-              'compare' => '<=', // 開始日が指定月の最終日以前
-              'type'    => 'NUMERIC', // YYYYMMDDは数値として比較
-          ),
-          array(
-              'key'     => 'event-end',
-              'value'   => $year . $mon . '01', // 指定月の1日 (例: 20250401)
-              'compare' => '>=', // 終了日が指定月の1日以降
-              'type'    => 'NUMERIC', // YYYYMMDDは数値として比較
-          ),
-      );
-  }
-
-  $the_query = new WP_Query($args);
-
-  if ($the_query->have_posts()) {
-      ob_start();
-      $template_slug_base = 'filtered-items-event';
-
-      while ($the_query->have_posts()) {
-          $the_query->the_post();
-
-          // テンプレートパーツに渡す変数を準備
-          $tag_terms = wp_get_post_terms(get_the_ID(), 'event_type', ['fields' => 'slugs']);
-          $tag_slugs_str = implode(',', $tag_terms);
-
-          $start_date_field = get_field('event-start', get_the_ID());
-          $end_date_field   = get_field('event-end', get_the_ID());
-          $event_months = get_event_months_for_archive($start_date_field, $end_date_field);
-          $months_str = implode(',', $event_months);
-
-          // ★get_template_part の第三引数で変数を渡すように修正
-          get_template_part(
-              'templates/parts/' . $template_slug_base,
-              null,
-              [
-                  'months_str' => esc_attr($months_str),
-                  'tag_slugs'  => esc_attr($tag_slugs_str),
-              ]
-          );
-      }
-      wp_reset_postdata();
-      echo ob_get_clean();
-  } else {
-      echo '<p class="text-sm lg:text-base leading-[1.4] px-3 lg:px-4  -pl-4 pb-4 lg:pb-6 border-b border-[#D9D9D9]">表示可能なイベントが見つかりませんでした。</p>';
-  }
-
-  wp_die();
-}
-add_action('wp_ajax_filter_events_by_month_and_tag', 'filter_events_by_month_and_tag');
-add_action('wp_ajax_nopriv_filter_events_by_month_and_tag', 'filter_events_by_month_and_tag');
+//修正後です
 
 // =================================================================
 //     アイキャッチの設定を有効化
@@ -344,7 +339,8 @@ function my_script_init() {
         'my-main-script',
         get_template_directory_uri() . '/assets/js/main.js',
         array('swiper', 'barba', 'my-filter-script'), // ここに 'my-filter-script' を追加
-        filemtime(get_theme_file_path('/assets/js/main.js')),
+        // filemtime(get_theme_file_path('/assets/js/main.js')),
+        time(), // ★★★ここを time() に変更★★★
         true
     );
 }
@@ -733,7 +729,7 @@ add_action( 'pre_get_posts', 'teraokanatsumi_orderby_pickup_column', 1 ); // 優
 
 
 // =================================================================
-// "goods" カスタム投稿タイプでGutenbergを無効にする
+//  "goods" カスタム投稿タイプでGutenbergを無効にする
 // =================================================================
 
 function teraokanatsumi_disable_gutenberg_for_goods($can_edit, $post_type) {
@@ -744,5 +740,54 @@ function teraokanatsumi_disable_gutenberg_for_goods($can_edit, $post_type) {
 }
 add_filter('use_block_editor_for_post_type', 'teraokanatsumi_disable_gutenberg_for_goods', 10, 2);
 
+// =================================================================
+//  Barba.js (Ajax) リクエスト時に、サイトルートURLにHomeページのコンテンツを強制的に返す
+ // =================================================================
+function handle_barba_home_ajax_request() {
+    // Ajax リクエストであること、かつサイトのルートURLへのリクエストであることを確認
+    // Barba.js v1 の Ajax リクエストを検出するために、X-Requested-With ヘッダーをチェック
+    // より確実にするには、Barba.js の設定でカスタムヘッダー 'X-Barba-Request' を追加する
+    // 例: barba.use(new Barba.Pjax(), new Barba.Prefetch(), { headers: { 'X-Barba-Request': 'true' } });
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        // 現在のリクエストURIがサイトのルート（/）かどうかをチェック
+        // Local環境の場合、$_SERVER['REQUEST_URI'] が '/' のみになることを確認
+        if ( $_SERVER['REQUEST_URI'] === '/' || $_SERVER['REQUEST_URI'] === '/index.php' ) {
+
+            // フロントページとして設定されている固定ページのIDを取得
+            $home_page_id = get_option('page_on_front');
+
+            if ( $home_page_id ) {
+                // Homeページの投稿オブジェクトを取得
+                $post = get_post( $home_page_id );
+
+                if ( $post ) {
+                    // WordPressのメインクエリをHomeページに設定し直す（テンプレートが正しく解決されるように）
+                    query_posts( array( 'page_id' => $home_page_id ) );
+
+                    // 出力バッファリングを開始
+                    ob_start();
+
+                    // Homeページ用のテンプレートを読み込む
+                    // (例: front-page.php, page.php, index.php の順で探される)
+                    // Barba.js が期待するHTML構造 (barba-container など) を持つテンプレート
+                    // 適切なテンプレートがテーマ内に存在することを確認してください
+                    // get_template_part('templates/page', 'home'); // もし home 専用のテンプレートパートがあるなら
+                    // または、WordPressの標準的なテンプレート階層に従ってpage.phpなどを読み込む
+                    include( get_page_template() );
+
+
+                    $html_content = ob_get_clean(); // バッファからHTMLコンテンツを取得
+
+                    // 取得したHTMLコンテンツを出力し、それ以上のWordPress処理を停止
+                    // これにより、余計な出力やリダイレクトを防ぐ
+                    echo $html_content;
+                    exit;
+                }
+            }
+        }
+    }
+}
+// 'template_redirect' アクションは、WordPressがどのテンプレートをロードするかを決定する直前に実行される
+add_action( 'template_redirect', 'handle_barba_home_ajax_request' );
 
 ?>

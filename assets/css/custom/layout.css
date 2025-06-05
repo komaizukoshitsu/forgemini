@@ -24,6 +24,18 @@ body {
 }
 
 /* Barba.js 遷移用クラス */
+[data-barba="container"] {
+  transition: opacity 0.1s ease-in-out;
+  /* これが重要です */
+  opacity: 1;
+  /* 初期状態は表示 */
+  /* その他のレイアウト関連のプロパティも必要に応じて設定 */
+  position: relative;
+  /* 遷移中にコンテンツが重ならないように */
+  width: 100%;
+  min-height: 100vh;
+  /* コンテンツの高さが足りない場合 */
+}
 /* [data-barba="container"] {
   transition: opacity 0.5s ease-in-out;
 }

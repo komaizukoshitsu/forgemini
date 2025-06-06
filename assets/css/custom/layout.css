@@ -203,52 +203,97 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   /* ここも body[data-page="subpage"]  のように修正 */
   body[data-page="subpage"]  .home-drawer-nav::after {
     /* body:not(.home) の代わりに body[data-page="subpage"]  を使う */
-    display: block;
-    content: "";
-    background-color: #FFFAD1;
-    position: absolute;
+    /* display: block; */
+    /* content: ""; */
+    /* background-color: #FFFAD1; */
+    /* position: absolute;
     z-index: -1;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    border-radius: 20px 20px 0 0;
+    border-radius: 20px 20px 0 0; */
   }
 }
 
-/* 初期状態は非表示 */
-/* .home-drawer-nav {
-  opacity: 0;
-  pointer-events: none;
-  display: none;
-} */
+.home-drawer-nav {
+  /* 以下、HTMLから移動したプロパティ */
+  position: fixed;
+  /* fixed */
+  padding-left: 20px;
+  /* px-5 のモバイル部分 */
+  padding-right: 18px;
+  /* right-[18px] のモバイル部分 */
+  padding-top: 50px;
+  /* pt-[50px] のモバイル部分 */
+  padding-bottom: 20px;
+  /* pb-5 のモバイル部分 */
+  bottom: 0;
+  /* bottom-0 */
+  left: 20px;
+  /* left-5 のモバイル部分 */
+  right: 18px;
+  /* right-[18px] のモバイル部分 */
+  z-index: 100;
+  /* z-[100] */
+  width: 90%;
+  /* w-[90%] のモバイル部分 */
+
+  /* 以前提案した表示/非表示とアニメーション関連のプロパティ */
+  transition-property: opacity,
+  visibility;
+  transition-duration: 0.2s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* PC下層でのメニューレイアウトを維持するため、display: flex; を初期で設定 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+
+  /* その他、背景色など */
+  /* background-color: rgba(255, 250, 209, 0.9); */
+  /* height: 100vh; */
+  /* または、必要な高さに合わせて調整 */
+}
+
+/* Tailwind CSSの `lg:` ブレークポイントのスタイルは、
+     メディアクエリを使ってカスタムCSSに記述します。 */
+@media (min-width: 1024px) {
+  .home-drawer-nav {
+    /* Tailwindのlgブレークポイント */
+    padding-left: 0;
+    /* lg:px-0 */
+    padding-right: 0;
+    /* lg:px-0 */
+    padding-top: 0;
+    /* lg:pt-0 */
+    padding-bottom: 0;
+    /* lg:pb-0 */
+    bottom: 120px;
+    /* lg:bottom-30 (30 * 4 = 120px) */
+    left: 80px;
+    /* lg:left-20 (20 * 4 = 80px) */
+    width: 190px;
+    /* lg:w-[190px] */
+    right: auto;
+  }
+}
 
 /* メニューが閉じている状態（初期状態、またはクリックで閉じた状態） */
 .home-drawer-nav:not(.is-active) {
   opacity: 0;
   pointer-events: none;
-  display: none;
-  /* 追加：要素自体を非表示にする */
+  visibility: hidden;
+  transition-delay: 0.2s;
 }
 
 /* メニューが開いている状態 */
 .home-drawer-nav.is-active {
   opacity: 1;
   pointer-events: auto;
-  /* max-height は不要になりますが、transition と組み合わせて
-     アニメーションさせたい場合は別途検討が必要です。
-     一旦、display: block; で表示させます。 */
-  display: block;
-  /* 追加：要素を表示する */
-}
-
-/* 開閉アニメーションの基本設定 */
-.home-drawer-nav {
-  /* opacityとpointer-eventsのtransitionはそのまま維持 */
-  transition-property: opacity;
-  transition-duration: 0.2s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  /* heightやmax-heightのトランジションは削除するか、必要に応じて調整 */
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 .header-nav-item a {

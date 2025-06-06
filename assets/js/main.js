@@ -363,36 +363,32 @@ function initHeaderNavActive() {
 // ----------------------------------------------------------------
 //     ヘッダードロワーを初期化する関数
 // ----------------------------------------------------------------
-function initHeaderDrawer(forcedNamespace = null) { // 引数を受け取るように変更
+function initHeaderDrawer(forcedNamespace = null) {
     let currentNamespace;
 
-    // 1. まずは forcedNamespace (Barba.jsフックから渡される値) を確認
+    // Namespace の取得ロジック (変更なし)
     if (forcedNamespace) {
         currentNamespace = forcedNamespace;
     } else {
-        // 2. forcedNamespace がない場合（初回ロード時など）、data-barba="container" から取得を試みる
         const barbaContainer = document.querySelector('[data-barba="container"]');
         if (barbaContainer && barbaContainer.dataset.barbaNamespace) {
             currentNamespace = barbaContainer.dataset.barbaNamespace;
         } else {
-            // 3. どちらも見つからない場合の最終的なフォールバック
-            currentNamespace = 'default'; // または他の適切なデフォルト値
+            currentNamespace = 'default';
         }
     }
 
-    // ここで currentNamespace が home になっていない場合に、
-    // URLに基づいて強制的に home に設定するロジックを再検討します。
     if (currentNamespace !== 'home' && (window.location.pathname === '/' || window.location.pathname === '/home/')) {
         console.log('initHeaderDrawer: Force setting namespace to home based on URL.');
         currentNamespace = 'home';
     }
-    const isTopPage = currentNamespace === 'home'; // この isTopPage は関数のスコープ内で使われる
+    const isTopPage = currentNamespace === 'home';
 
     console.log('initHeaderDrawer: isTopPage is:', isTopPage);
     console.log('initHeaderDrawer: Barba Namespace is:', currentNamespace);
 
-    const homeDrawer = document.querySelector('.home-drawer');
-    const drawerNav = document.querySelector('.home-drawer-nav');
+    const homeDrawer = document.querySelector('.home-drawer'); // ハンバーガーアイコンのラッパー
+    const drawerNav = document.querySelector('.home-drawer-nav'); // ドロワーメニュー本体
     const bar1 = homeDrawer?.querySelector('.drawer-iconBar1');
     const bar2 = homeDrawer?.querySelector('.drawer-iconBar2');
 
@@ -403,26 +399,21 @@ function initHeaderDrawer(forcedNamespace = null) { // 引数を受け取るよ�
 
     // ドロワー（メニュー）の開閉を制御する関数
     const toggleDrawer = (isOpen) => {
-        console.log('toggleDrawer called with isOpen:', isOpen);
         drawerNav.classList.toggle('is-active', isOpen);
         bar1.classList.toggle('is-active', isOpen);
         bar2.classList.toggle('is-active', isOpen);
-
-        if (isOpen) {
-            drawerNav.classList.add('opacity-100', 'pointer-events-auto');
-            drawerNav.classList.remove('opacity-0', 'pointer-events-none');
-        } else {
-            drawerNav.classList.add('opacity-0', 'pointer-events-none');
-            drawerNav.classList.remove('opacity-100', 'pointer-events-auto');
-        }
+        console.log('toggleDrawer called with isOpen:', isOpen, 'drawerNav.classList:', drawerNav.classList.contains('is-active'));
     };
 
     // ハンバーガーメニューアイコンのクリックイベントリスナー
+    // イベントリスナーの重複登録を防ぐ
     if (homeDrawer._toggleClickHandler) {
         homeDrawer.removeEventListener('click', homeDrawer._toggleClickHandler);
     }
     homeDrawer._toggleClickHandler = function (e) {
-        toggleDrawer(!drawerNav.classList.contains('is-active'));
+        if (isTopPage) { // トップページでのみクリックイベントを処理
+            toggleDrawer(!drawerNav.classList.contains('is-active'));
+        }
     };
     homeDrawer.addEventListener('click', homeDrawer._toggleClickHandler);
 
@@ -430,13 +421,8 @@ function initHeaderDrawer(forcedNamespace = null) { // 引数を受け取るよ�
     if (document._outsideClickHandler) {
         document.removeEventListener('click', document._outsideClickHandler);
     }
-
-    // ドロワー外クリックで閉じる処理を適用するかどうかを判定
-    const isMobile = window.innerWidth < 768; // この isMobile は関数のスコープ内で使われる
-    const isSubpage = !isTopPage; // currentNamespace が home 以外なら下層ページ
-
-    if (!isSubpage || isMobile) {
-        console.log('initHeaderDrawer: Outside click handler IS REGISTERED.');
+    if (isTopPage) { // トップページでのみ適用
+        console.log('initHeaderDrawer: Outside click handler IS REGISTERED (Top page).');
         document._outsideClickHandler = function (e) {
             const isActive = drawerNav.classList.contains('is-active');
             const isHomeDrawerClick = homeDrawer.contains(e.target);
@@ -451,6 +437,19 @@ function initHeaderDrawer(forcedNamespace = null) { // 引数を受け取るよ�
         console.log('initHeaderDrawer: Outside click handler NOT REGISTERED (Subpage PC).');
     }
 
+    // ドロワー内のリンクをクリックで閉じる処理 (トップページのみ)
+    drawerNav.querySelectorAll('a').forEach(link => {
+        if (link._clickHandler) {
+            link.removeEventListener('click', link._clickHandler);
+        }
+        link._clickHandler = function() {
+            if (isTopPage && drawerNav.classList.contains('is-active')) {
+                toggleDrawer(false);
+            }
+        };
+        link.addEventListener('click', link._clickHandler);
+    });
+
     const fixedContent = document.querySelector(".fixed-content");
     const hiddenArea = document.querySelector("footer");
 
@@ -460,49 +459,44 @@ function initHeaderDrawer(forcedNamespace = null) { // 引数を受け取るよ�
             hiddenArea._intersectionObserver = null;
         }
 
-        // handleVisibility 関数は、外側の initHeaderDrawer のスコープにある
-        // isTopPage と currentNamespace を参照します。
         const handleVisibility = () => {
-            // ここで isTopPage と currentNamespace を改めて取得する必要はありません。
-            // 外側の initHeaderDrawer 関数スコープのものを参照します。
-            const isMobileCurrent = window.innerWidth < 768; // リサイズ時に最新のモバイル判定
+            const isMobileCurrent = window.innerWidth < 768;
 
-            console.log('handleVisibility: isTopPage:', isTopPage, 'isMobile:', isMobileCurrent); // isTopPage は外のスコープのものを利用
-            console.log('handleVisibility: currentNamespace:', currentNamespace); // currentNamespace は外のスコープのものを利用
+            console.log('handleVisibility: isTopPage is:', isTopPage, 'isMobileCurrent is:', isMobileCurrent);
+            console.log('handleVisibility: currentNamespace is:', currentNamespace);
 
-            // まず、drawerNav の全ての表示/非表示関連クラスとスタイルを完全にリセット
-            drawerNav.classList.remove(
-                'is-active', 'opacity-0', 'opacity-100', 'pointer-events-none', 'pointer-events-auto',
-                'hidden', 'block', 'left-full', 'translate-x-full', // 'fixed', 'absolute', 'relative' を削除
-                'inset-0', 'w-full', 'h-full', 'transform', 'transition'
-            );
-            drawerNav.style.cssText = '';
+            // まずは homeDrawer のインラインスタイルをリセット
+            homeDrawer.style.removeProperty('display');
 
-            // homeDrawer の display も初期化
-            homeDrawer.style.cssText = '';
-
-            // ハンバーガーメニューのバーをリセット
-            bar1.classList.remove('is-active');
-            bar2.classList.remove('is-active');
-
-            // --- 各ページタイプに合わせた初期状態を設定 ---
+            // --- homeDrawer (ハンバーガーアイコンラッパー) の表示/非表示を制御 ---
             if (!isTopPage && !isMobileCurrent) { // 下層ページ（PC）の場合
-                console.log('handleVisibility: Subpage (PC) detected. Adding is-active.');
+                console.log('handleVisibility: Subpage (PC) detected. Hiding homeDrawer.');
+
+                // メニューを常に開いた状態にする (CSSの is-active で制御)
                 drawerNav.classList.add('is-active');
-                homeDrawer.style.setProperty('display', 'none', 'important'); // ハンバーガーアイコンを非表示
 
-            } else if (isTopPage && !isMobileCurrent) { // トップページ（PC）の場合
-                console.log('handleVisibility: Top page (PC) detected. Removing is-active.');
-                drawerNav.classList.remove('is-active');
-                homeDrawer.style.setProperty('display', '', 'important'); // ハンバーガーアイコンを表示
+                // ハンバーガーアイコンを非表示
+                homeDrawer.style.setProperty('display', 'none', 'important');
 
-            } else if (isMobileCurrent) { // モバイルの場合（トップ/下層共通）
-                console.log('handleVisibility: Mobile detected. Removing is-active.');
+                // バーのクラスはアクティブではない状態にリセット
+                bar1.classList.remove('is-active');
+                bar2.classList.remove('is-active');
+
+            } else { // トップページ（PC）の場合 OR モバイル（トップ/下層共通）の場合
+                console.log('handleVisibility: Top page (PC) or Mobile detected. Showing homeDrawer.');
+
+                // メニューを閉じた状態にする (CSSの not(.is-active) で制御)
                 drawerNav.classList.remove('is-active');
-                homeDrawer.style.setProperty('display', '', 'important'); // ハンバーガーアイコンを表示
+
+                // ハンバーガーアイコンは表示 (HTML/CSSのデフォルトに任せる)
+                // homeDrawer.style.removeProperty('display'); は上記で実行済み
+
+                // バーのクラスはアクティブではない状態にリセット
+                bar1.classList.remove('is-active');
+                bar2.classList.remove('is-active');
             }
-            console.log('handleVisibility: Final drawerNav classes:', drawerNav.classList);
-            console.log('handleVisibility: Final homeDrawer style:', homeDrawer.style.display);
+            console.log('handleVisibility: Final homeDrawer style (after handleVisibility):', homeDrawer.style.display);
+            console.log('handleVisibility: Final drawerNav classes (after handleVisibility):', drawerNav.classList);
         };
 
         const observer = new IntersectionObserver(
@@ -520,15 +514,17 @@ function initHeaderDrawer(forcedNamespace = null) { // 引数を受け取るよ�
         observer.observe(hiddenArea);
         hiddenArea._intersectionObserver = observer;
 
+        // リサイズイベントリスナー
         if (window._drawerResizeHandler) {
             window.removeEventListener('resize', window._drawerResizeHandler);
         }
         window._drawerResizeHandler = handleVisibility;
         window.addEventListener('resize', window._drawerResizeHandler);
 
-        // ★★★ DOMが完全に準備された後に handleVisibility を実行する（重要） ★★★
-        // 初回ロード時と Barba.js 遷移後で確実に実行されるようにする
+        // ★ initHeaderDrawer が呼ばれたときに必ず初期化を実行 ★
+        // これが Barba.js の after フックから呼ばれることになります
         handleVisibility();
+
     } else {
         console.warn('initHeaderDrawer: fixedContent or hiddenArea not found for observer.');
     }
@@ -668,7 +664,7 @@ function setupBarba() {
             { namespace: 'page' }
         ],
         transitions: [{
-            name: 'no-animation-fade',
+            name: 'default-transition',
             // ★重要な修正点: leave フックでアニメーション完了を待つ★
             beforeEnter({ next }) {
                 console.log('--- Barba transition beforeEnter フックが実行されました！ ---');
@@ -718,93 +714,82 @@ function setupBarba() {
                     }, 150);
                 });
             },
+            // Barba.js 遷移前の処理
             before(data) {
                 console.log('--- Barba transition before フックが実行されました！ ---');
                 const prevDrawerNav = document.querySelector('.home-drawer-nav');
-                const prevHomeDrawer = document.querySelector('.home-drawer');
+                const prevHomeDrawer = document.querySelector('.home-drawer'); // homeDrawer を取得
 
                 if (prevDrawerNav) {
-                    prevDrawerNav.classList.remove(
-                        'is-active', 'opacity-0', 'opacity-100', 'pointer-events-none', 'pointer-events-auto',
-                        'hidden', 'block',
-                        'left-full', 'translate-x-full'
-                    );
-                    console.log('Prev drawerNav styles and classes cleared (if any).');
+                    // is-active クラスだけは前の状態をクリアするため残す
+                    // その他の表示/非表示を強制するクラスは絶対に削除する
+                    prevDrawerNav.classList.remove('is-active');
+                    // prevDrawerNav.classList.remove('left-full', 'translate-x-full'); // もしこれらのクラスが残っていたら削除
                 }
+
+                // prevHomeDrawer (ハンバーガーアイコンラッパー) に対する操作
+                // ここで style.cssText = '' を実行しない！
                 if (prevHomeDrawer) {
-                    prevHomeDrawer.style.cssText = '';
-                    console.log('Prev homeDrawer styles cleared.');
+                    // もし特定のBarbaアニメーションで一時的に何かスタイルを付与していたら、
+                    // ここで安全に削除することは考えられるが、基本的には不要。
+                    // 今回は特に触れない。
                 }
+
+                // ここでページスクロールをトップにリセット
+                window.scrollTo(0, 0);
+
+                // もし loading クラスなどがあれば削除
+                document.body.classList.remove('loading');
+
+                // ここで initHeaderDrawer は呼ばない
+                // initHeaderDrawer() を Barba.js の before フックで呼ばない
+                // initHeaderDrawer(data.current.namespace); // 不要
             },
+            // Barba.js 遷移後の処理
             after(data) {
                 console.log('--- Barba transition after フックが実行されました！ ---');
                 console.log('次のページのnamespace:', data.next.namespace);
 
                 try {
-                    const homeDrawerNav = data.next.container.querySelector('.home-drawer-nav');
-                    const homeDrawer = data.next.container.querySelector('.home-drawer');
+                    const homeDrawerNav = document.querySelector('.home-drawer-nav'); // document.querySelector で再取得
+                    const newNamespace = data.next.namespace;
 
                     if (homeDrawerNav) {
-                        if (homeDrawerNav.classList.contains('is-active')) {
-                            homeDrawerNav.classList.remove('is-active');
+                        // Namespaceによる is-active の制御
+                        // Barba.js 遷移直後のメニューの初期状態をここで確実に設定
+                        if (newNamespace === 'home') {
+                            homeDrawerNav.classList.remove('is-active'); // トップページでは閉じる
+                            console.log('homeDrawerNav reset for home page (closed).');
+                        } else {
+                            homeDrawerNav.classList.add('is-active'); // 下層ページでは常に開く
+                            console.log('homeDrawerNav set to active for subpage.');
                         }
-                        // homeDrawerNav.style.opacity = '';
-                        // homeDrawerNav.style.pointerEvents = '';
-                        // homeDrawerNav.style.display = '';
-
-                        homeDrawerNav.classList.add(
-                            'fixed',
-                            'px-5', 'lg:px-0',
-                            'pt-[50px]', 'lg:pt-0',
-                            'pb-5', 'lg:pb-0',
-                            'bottom-[120px]',
-                            'right-[80px]',
-                            'left-auto',
-                            'transition-opacity', 'duration-200', 'ease-in-out',
-                            'z-[100]',
-                            'w-[90%]', 'lg:w-[190px]'
-                        );
-                        console.log('homeDrawerNav classes reapplied in after hook.');
                     }
 
-                    if (typeof initHeaderDrawer === 'function') {
-                        initHeaderDrawer(data.next.namespace);
-                    } else {
-                        console.warn('initHeaderDrawer 関数が定義されていません。');
-                    }
+                    // ここで initHeaderDrawer を呼び出す
+                    // setTimeout を使って、DOMのレンダリングが一段落するのを待つ
+                    setTimeout(() => {
+                        if (typeof initHeaderDrawer === 'function') {
+                            initHeaderDrawer(newNamespace); // forcedNamespace を渡す
+                            console.log('Barba after hook: initHeaderDrawer called with namespace:', newNamespace);
+                        } else {
+                            console.warn('initHeaderDrawer 関数が定義されていません。');
+                        }
+                    }, 50); // 50ms の遅延 (必要なら100msに調整)
 
-                    if (typeof initFilterScripts === 'function') {
-                        initFilterScripts(data.next.namespace);
-                    } else {
-                        console.warn('initFilterScripts 関数が定義されていません。');
-                    }
-
-                    // initAllScripts の呼び出し順序は、他のスクリプトが全て初期化されてからが安全
+                    // initAllScripts() は Barba の after フックの最後に呼ぶべき
                     if (typeof initAllScripts === 'function') {
                         initAllScripts();
                     } else {
                         console.warn('initAllScripts 関数が定義されていません。');
                     }
 
-                    const bodyElement = document.body;
-                    const newNamespace = data.next.namespace;
-
-                    if (newNamespace) {
-                        bodyElement.setAttribute('data-page', newNamespace);
-                    } else {
-                        if (data.next.container.classList.contains('home')) {
-                            bodyElement.setAttribute('data-page', 'home');
-                        } else {
-                            bodyElement.setAttribute('data-page', 'subpage');
-                        }
+                    // body の data-page 属性を更新
+                    if (data.next.container) {
+                        const nextBarbaNamespace = data.next.container.dataset.barbaNamespace || 'default';
+                        document.body.setAttribute('data-page', nextBarbaNamespace);
+                        console.log('Body data-page attribute updated to:', nextBarbaNamespace);
                     }
-                    console.log('Barba.js after hook: data-page set to', bodyElement.getAttribute('data-page'));
-
-                    // ★setTimeout の時間を調整して再試行★
-                    // setTimeout(() => {
-                    //     document.dispatchEvent(new CustomEvent('wpcf7.dom_updated'));
-                    //     console.log('DEBUG: wpcf7.dom_updated イベントが transition.after でディスパッチされました (setTimeout)。');
-                    // }, 300);
 
                 } catch (error) {
                     console.error('Barba.js after hook でエラーが発生しました:', error);

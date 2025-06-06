@@ -767,7 +767,6 @@ function setupBarba() {
                     }
 
                     // ここで initHeaderDrawer を呼び出す
-                    // setTimeout を使って、DOMのレンダリングが一段落するのを待つ
                     setTimeout(() => {
                         if (typeof initHeaderDrawer === 'function') {
                             initHeaderDrawer(newNamespace); // forcedNamespace を渡す
@@ -775,9 +774,21 @@ function setupBarba() {
                         } else {
                             console.warn('initHeaderDrawer 関数が定義されていません。');
                         }
-                    }, 50); // 50ms の遅延 (必要なら100msに調整)
+                    }, 50);
 
-                    // initAllScripts() は Barba の after フックの最後に呼ぶべき
+                    // ★ここが最も重要！ initFilterScripts を確実に呼び出す★
+                    // DOMが完全に更新されたことを確認するため、わずかな遅延を入れるのがベストプラクティス
+                    setTimeout(() => { // initFilterScripts を呼び出すための setTimeout
+                        if (typeof initFilterScripts === 'function') {
+                            initFilterScripts(newNamespace); // 新しいnamespaceを渡す
+                            console.log('Barba after hook: initFilterScripts called with namespace:', newNamespace);
+                        } else {
+                            console.warn('initFilterScripts 関数が定義されていません。');
+                        }
+                    }, 100); // initHeaderDrawer とは別のタイミングで、DOMが安定するのをより確実に待つために100ms
+
+                    // initAllScripts は、他のすべてのスクリプトの初期化が終わった後に呼ぶのが理想
+                    // initAllScripts の中身が重複しないように注意
                     if (typeof initAllScripts === 'function') {
                         initAllScripts();
                     } else {

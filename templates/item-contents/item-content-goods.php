@@ -16,25 +16,25 @@ $badge_new = trim(ob_get_clean());
 ?>
 
 <?php if (!empty($badge_new) || !empty($badge_pickup)) : ?>
-    <div class="flex gap-1 lg:gap-2 h-5 lg:h-6 items-center">
+    <div class="flex gap-1 xl:gap-2 h-5 xl:h-6 items-center">
         <?= $badge_new; ?>
         <?= $badge_pickup; ?>
     </div>
 <?php endif; ?>
 
-<div class="text-sm lg:text-base leading-[1.4]">
+<div class="text-sm xl:text-base leading-[1.4]">
     <?php the_title(); ?>
 </div>
 
-<div class="flex items-baseline text-xs lg:text-sm leading-[1.3]">
+<div class="flex items-baseline text-xs xl:text-sm leading-[1.3]">
     <div>¥</div>
     <div class="price" style="font-family: 'Open Sans', sans-serif;">
         <?php the_field('goods-price'); ?>
     </div>
-    <div class="text-[10px] lg:text-xs tracking-[0.05em]">（税込）</div>
+    <div class="text-[10px] xl:text-xs tracking-[0.05em]">（税込）</div>
 </div>
 
-<div class="flex text-[10px] lg:text-xs leading-[1.3]">
+<div class="flex text-[10px] xl:text-xs leading-[1.3]">
     <?php
     // ★修正点2: goods_tags を goods_category に変更
     $categories = get_the_terms(get_the_ID(), 'goods_category'); // タクソノミー名を変更

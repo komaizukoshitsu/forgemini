@@ -1,12 +1,12 @@
-<article class="w-full mt-5 lg:mt-10 max-w-243">
+<article class="w-full mt-5 xl:mt-10 max-w-243">
     <a href="#" class="block group">
         <!-- 画像部分 -->
-        <div class="relative overflow-hidden rounded-[10px] lg:rounded-[20px] aspect-[4/3] lg:aspect-[2/1]">
-            <img class="w-full h-full object-cover rounded-[10px] lg:rounded-[20px]" src="<?php echo get_template_directory_uri(); ?>/assets/image/sns-icon.webp" alt="" loading="lazy">
+        <div class="relative overflow-hidden rounded-[10px] xl:rounded-[20px] aspect-[4/3] xl:aspect-[2/1]">
+            <img class="w-full h-full object-cover rounded-[10px] xl:rounded-[20px]" src="<?php echo get_template_directory_uri(); ?>/assets/image/sns-icon.webp" alt="" loading="lazy">
 
             <!-- PC用：hoverで出るテキスト -->
-            <div class="absolute inset-0 hidden lg:flex flex-col justify-end p-4 lg:p-8 text-white transition-opacity duration-250 bg-gradient-to-b from-black/10 to-black/40 opacity-0 group-hover:opacity-100">
-                <div class="translate-y-4 opacity-0 transition-all duration-250 group-hover:translate-y-0 group-hover:opacity-100 flex flex-col justify-end items-baseline gap-1 lg:gap-2">
+            <div class="absolute inset-0 hidden xl:flex flex-col justify-end p-4 xl:p-8 text-white transition-opacity duration-250 bg-gradient-to-b from-black/10 to-black/40 opacity-0 group-hover:opacity-100">
+                <div class="translate-y-4 opacity-0 transition-all duration-250 group-hover:translate-y-0 group-hover:opacity-100 flex flex-col justify-end items-baseline gap-1 xl:gap-2">
                     <div class="text-base leading-[1.4]">SNSアイコン制作 in 『タクラミ』</div>
                     <div class="flex items-baseline text-sm leading-[1.3]">
                         <div>¥</div>
@@ -19,7 +19,7 @@
         </div>
 
         <!-- スマホ用：画像の下に常に表示されるテキスト -->
-        <div class="block lg:hidden mt-2">
+        <div class="block xl:hidden mt-2">
             <div class="text-sm leading-[1.4]">SNSアイコン制作 in 『タクラミ』</div>
             <div class="flex items-baseline text-xs leading-[1.3] mt-1">
                 <div>¥</div>

@@ -26,30 +26,11 @@ body {
 /* Barba.js 遷移用クラス */
 [data-barba="container"] {
   transition: opacity 0.1s ease-in-out;
-  /* これが重要です */
   opacity: 1;
-  /* 初期状態は表示 */
-  /* その他のレイアウト関連のプロパティも必要に応じて設定 */
   position: relative;
-  /* 遷移中にコンテンツが重ならないように */
   width: 100%;
   min-height: 100vh;
-  /* コンテンツの高さが足りない場合 */
 }
-/* [data-barba="container"] {
-  transition: opacity 0.5s ease-in-out;
-}
-
-[data-barba="container"].is-leaving {
-  opacity: 0 !important;
-}
-
-[data-barba="container"].is-entering {
-  opacity: 1 !important;
-} */
-
-/* 初回ロード時のアニメーションと競合しないように注意 */
-/* もしopacity:0から始まるアニメーションがある場合は、それも調整 */
 
 img {
   width: 100%;
@@ -147,16 +128,6 @@ img {
   animation: curtainSlide 2s ease-in-out forwards;
 }
 
-/* header-nav */
-.header-nav-item .active {
-  transform: translateX(10px);
-  font-weight: 500;
-}
-
-.header-nav-item a:hover {
-  transform: translateX(10px);
-}
-
 .home .header-main-wrapper {
   max-width: 100%;
 }
@@ -166,118 +137,31 @@ img {
   padding-right: 0;
 }
 
-/* トップページのみ背景色を表示 */
-/* PCでのスタイル（ホームページ） */
-body[data-page="home"] .home-drawer-nav::after {
+/* home-drawer-navがアクティブなときに共通の背景スタイルを設定（デフォルトは非表示） */
+.home-drawer-nav::after {
   content: '';
   background-color: #FFFAD1;
   position: absolute;
   z-index: -1;
-  border-radius: 20px;
   pointer-events: none;
-  /* 拡張サイズ */
-  top: -32px;
-  left: -24px;
-  right: -24px;
-  bottom: -60px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 0s;
 }
 
-/* 下層ページでは背景非表示 */
-/* ここが body[data-page="subpage"]  のように修正したクラス名になるはず */
-body[data-page="subpage"]  .home-drawer-nav::after {
-  /* body:not(.home) の代わりに body[data-page="subpage"]  を使う */
-  display: none;
-  content: none;
+/* メニューが開いている状態 (is-active) のときに背景を表示 */
+.home-drawer-nav.is-active::after {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
 }
 
-/* スマホ用の背景表示（PCと同じ背景色） */
-@media (max-width: 1024px) {
-  body[data-page="home"] .home-drawer-nav::after {
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 20px 20px 0 0;
-  }
-
-  /* ここも body[data-page="subpage"]  のように修正 */
-  body[data-page="subpage"]  .home-drawer-nav::after {
-    /* body:not(.home) の代わりに body[data-page="subpage"]  を使う */
-    /* display: block; */
-    /* content: ""; */
-    /* background-color: #FFFAD1; */
-    /* position: absolute;
-    z-index: -1;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 20px 20px 0 0; */
-  }
-}
-
-.home-drawer-nav {
-  /* 以下、HTMLから移動したプロパティ */
-  position: fixed;
-  /* fixed */
-  padding-left: 20px;
-  /* px-5 のモバイル部分 */
-  padding-right: 18px;
-  /* right-[18px] のモバイル部分 */
-  padding-top: 50px;
-  /* pt-[50px] のモバイル部分 */
-  padding-bottom: 20px;
-  /* pb-5 のモバイル部分 */
-  bottom: 0;
-  /* bottom-0 */
-  left: 20px;
-  /* left-5 のモバイル部分 */
-  right: 18px;
-  /* right-[18px] のモバイル部分 */
-  z-index: 100;
-  /* z-[100] */
-  width: 90%;
-  /* w-[90%] のモバイル部分 */
-
-  /* 以前提案した表示/非表示とアニメーション関連のプロパティ */
-  transition-property: opacity,
-  visibility;
-  transition-duration: 0.2s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* PC下層でのメニューレイアウトを維持するため、display: flex; を初期で設定 */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-
-  /* その他、背景色など */
-  /* background-color: rgba(255, 250, 209, 0.9); */
-  /* height: 100vh; */
-  /* または、必要な高さに合わせて調整 */
-}
-
-/* Tailwind CSSの `lg:` ブレークポイントのスタイルは、
-     メディアクエリを使ってカスタムCSSに記述します。 */
-@media (min-width: 1024px) {
-  .home-drawer-nav {
-    /* Tailwindのlgブレークポイント */
-    padding-left: 0;
-    /* lg:px-0 */
-    padding-right: 0;
-    /* lg:px-0 */
-    padding-top: 0;
-    /* lg:pt-0 */
-    padding-bottom: 0;
-    /* lg:pb-0 */
-    bottom: 120px;
-    /* lg:bottom-30 (30 * 4 = 120px) */
-    left: 80px;
-    /* lg:left-20 (20 * 4 = 80px) */
-    width: 190px;
-    /* lg:w-[190px] */
-    right: auto;
-  }
+/* メニューが閉じている状態（is-activeではない時）の背景に遅延を設定 */
+.home-drawer-nav:not(.is-active)::after {
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 2s;
 }
 
 /* メニューが閉じている状態（初期状態、またはクリックで閉じた状態） */
@@ -285,7 +169,6 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   opacity: 0;
   pointer-events: none;
   visibility: hidden;
-  transition-delay: 0.2s;
 }
 
 /* メニューが開いている状態 */
@@ -296,8 +179,73 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   transition-delay: 0s;
 }
 
-.header-nav-item a {
+/* PCでのスタイル（xl） */
+@media (min-width: 1280px) {
+  .home-drawer-nav {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    bottom: 120px;
+    left: 80px;
+    width: 190px;
+    right: auto;
+  }
+
+  /* PCのトップページのみ: メニューが開いたときに背景を表示 */
+  body[data-page="home"] .home-drawer-nav.is-active::after {
+    border-radius: 20px;
+    top: -32px;
+    left: -24px;
+    right: -24px;
+    bottom: -60px;
+  }
+
+  /* PCの下層ページ: 背景を常に非表示（opacityとvisibilityで制御） */
+  /* bodyにdata-page="home"がない場合、is-activeでも背景を非表示 */
+  body:not([data-page="home"]) .home-drawer-nav::after {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* スマホでのスタイル (max-width: 1279px) */
+@media (max-width: 1279px) {
+  .home-drawer-nav {
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 50px;
+    padding-bottom: 20px;
+    bottom: 0;
+    left: 18px;
+    right: 18px;
+    z-index: 100;
+    /* width: 90%; */
+  }
+
+  /* スマホの全ページ: メニューが開いたときに背景を表示 */
+  .home-drawer-nav.is-active::after {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+/* header-nav */
+.header-nav-item .active {
+  transform: translateX(10px);
+  font-weight: 500;
+}
+
+/* .header-nav-item a {
   padding: 6px 0;
+} */
+
+.header-nav-item a:hover {
+  transform: translateX(10px);
 }
 
 .fixed-content {
@@ -314,8 +262,8 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   pointer-events: none;
 }
 
-/* スマホ（max-width: 1023px 以下）：下にスライドして消える */
-@media (max-width: 1023px) {
+/* スマホ（max-width: 1279px 以下）：下にスライドして消える */
+@media (max-width: 1279px) {
   .fixed-content.is-hidden {
     transform: translateY(20px);
   }
@@ -377,7 +325,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   aspect-ratio: 3 / 2;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .parallax-1-wrapper {
     aspect-ratio: 75 / 86;
   }
@@ -395,7 +343,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   animation: 20s linear infinite rotation;
 }
 
-@media screen and (min-width: 768px) and (max-width: 1023px) {
+@media screen and (min-width: 768px) and (max-width: 1279px) {
   .top-event-img::after {
     width: 100px;
     height: 100px;
@@ -403,7 +351,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   }
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .top-event-img::after {
     right: 0;
   }
@@ -431,7 +379,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   line-height: 1.75;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .single-content p {
     font-size: 14px;
     margin: 16px 0;
@@ -444,7 +392,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   padding-left: 16px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .single-content .wp-block-list li {
     font-size: 14px;
   }
@@ -454,7 +402,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   margin: 40px 0;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .wp-block-list {
     margin: 16px 0;
   }
@@ -471,7 +419,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   left: 0;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .single-content .wp-block-list li::before {
     top: 6px;
   }
@@ -481,7 +429,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   margin: 20px 0;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .single-content .wp-block-image {
     margin: 8px 0;
   }
@@ -498,7 +446,7 @@ body[data-page="subpage"]  .home-drawer-nav::after {
   border-radius: 20px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .single .attachment-post-thumbnail {
     border-radius: 8px;
   }
@@ -556,7 +504,7 @@ select::-ms-expand {
   right: 20px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   #sbi_images {
     gap: 8px !important;
   }
@@ -577,6 +525,25 @@ select::-ms-expand {
   }
 }
 
+/* 下層ページ用のフッターマージン */
+body:not([data-page="home"]) .footer {
+  margin-top: 80px;
+  /* mt-20 */
+}
+
+@media (min-width: 1280px) {
+  body:not([data-page="home"]) .footer {
+    margin-top: 200px;
+    /* lg:mt-50 */
+  }
+}
+
+/* トップページではマージンなし（または他のマージンを適用） */
+body[data-page="home"] .footer {
+  margin-top: 0;
+  /* 必要に応じて明示的にリセット */
+}
+
 .footer::before {
   content: "";
   position: absolute;
@@ -588,7 +555,7 @@ select::-ms-expand {
   background-size: cover;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .footer::before {
     top: -20px;
     height: 48px;
@@ -600,7 +567,7 @@ select::-ms-expand {
   width: calc(33.3% - 36px * 2 / 3);
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .footer .nav-item {
     width: calc(50% - 16px * 1 / 2);
   }
@@ -639,7 +606,7 @@ select::-ms-expand {
   font-weight: 400;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .error404 .link {
     font-size: 12px;
   }
@@ -658,7 +625,7 @@ select::-ms-expand {
   line-height: 1.75;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .main-form-lists {
     padding: 16px 20px 16px 40px;
   }
@@ -673,10 +640,6 @@ select::-ms-expand {
 .contact label.privacy-policy a:hover {
   box-shadow: none;
 }
-
-/* .contact-step li:nth-child(2) {
-  position: relative;
-} */
 
 .wpcf7-form-control.wpcf7-submit {
   /* position: relative; */
@@ -711,7 +674,7 @@ select::-ms-expand {
 }
 
 /* スマホ */
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .wpcf7-form-control.wpcf7-submit {
     width: 100%;
     max-width: 350px;
@@ -730,7 +693,7 @@ select::-ms-expand {
   gap: 18px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .contact-form-top .wpcf7-form-control {
     gap: 8px;
   }
@@ -741,7 +704,7 @@ select::-ms-expand {
   width: calc(50% - 20px * 1 / 2);
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .contact-form-top .wpcf7-list-item {
     width: 100%;
   }
@@ -763,7 +726,7 @@ select::-ms-expand {
   transition: all 0.3s ease 0s;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .contact-form-top .wpcf7-list-item-label {
     font-size: 14px;
     padding: 8px 16px 8px 43px;
@@ -791,7 +754,7 @@ select::-ms-expand {
   transform: translateY(-50%);
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .contact-form-top .wpcf7-list-item-label::before {
     left: 16px;
   }
@@ -809,7 +772,7 @@ select::-ms-expand {
   height: 10px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .contact-form-top .wpcf7-list-item-label::after {
     left: 21px;
   }
@@ -857,7 +820,7 @@ select::-ms-expand {
   height: 44px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .wpcf7-form .form input[type="text"],
   .wpcf7-form .form input[type="email"] {
     margin-top: 8px;
@@ -872,7 +835,6 @@ select::-ms-expand {
     padding: 9px 16px;
   }
 }
-
 
 input::-moz-placeholder,
 textarea::-moz-placeholder {
@@ -899,7 +861,7 @@ textarea::placeholder {
   align-items: center;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .contact-confirm-content {
     font-size: 14px;
     padding: 8px 16px;
@@ -924,7 +886,7 @@ textarea::placeholder {
   letter-spacing: 0.07em;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .must {
     height: 20px;
     font-size: 10px;
@@ -990,7 +952,7 @@ textarea::placeholder {
   padding: 80px 100px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .subjects-list {
     padding: 28px 20px 36px;
   }
@@ -1002,7 +964,7 @@ textarea::placeholder {
   border-radius: 20px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .subjects-list ul.list-disc {
     padding: 16px 20px 16px 32px;
     margin-bottom: 20px;
@@ -1017,7 +979,7 @@ textarea::placeholder {
   gap: 1rem;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .main-form-contact,
   .main-form-confirm {
     gap: 8px;
@@ -1038,7 +1000,7 @@ textarea::placeholder {
   /* 上下のマージン (必要に応じて調整) */
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .contact-confirm-border {
     margin: 24px 0;
   }
@@ -1078,7 +1040,7 @@ textarea::placeholder {
 }
 
 /* スマホ */
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .previous-btn {
     width: 100%;
     max-width: 350px;
@@ -1097,7 +1059,8 @@ textarea::placeholder {
   color: #fff;
   transition: all 0.3s ease 0s;
 }
-@media screen and (max-width: 1023px) {
+
+@media screen and (max-width: 1279px) {
   .contact-confirm .wpcf7-submit {
     margin-top: 12px;
   }
@@ -1128,17 +1091,16 @@ textarea::placeholder {
   transform: translateX(-50%);
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .contact-thanks-text::before {
     width: 75px;
   }
 }
 
-
 /* お問い合わせページ footerのcontact非表示 */
-.contact .footer-contact,
-.contact-confirm .footer-contact,
-.thanks .footer-contact {
+body[data-page="contact"] .footer-contact,
+body[data-page="contact-confirm"] .footer-contact,
+body[data-page="thanks"] .footer-contact {
   display: none;
 }
 
@@ -1172,14 +1134,14 @@ textarea::placeholder {
   font-size: 14px;
 }
 
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 1279px) {
   .custom-dropdown {
     width: 100%;
     height: 32px;
   }
 }
 
-.container {
+/* .container {
   width: 100%;
 }
 
@@ -1211,4 +1173,4 @@ textarea::placeholder {
   .container {
     max-width: 1536px;
   }
-}
+} */

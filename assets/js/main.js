@@ -56,13 +56,13 @@ function initSwipers() {
     initSingleSwiper('.swiper-default', {
         slidesPerView: 1.2, spaceBetween: 12, slidesOffsetBefore: 20, slidesOffsetAfter: 16,
         navigation: { nextEl: '.default-swiper-next', prevEl: '.default-swiper-prev' },
-        breakpoints: { 1024: { slidesPerView: 'auto', spaceBetween: 36, slidesOffsetBefore: 0, slidesOffsetAfter: 36 } },
+        breakpoints: { 1280: { slidesPerView: 'auto', spaceBetween: 36, slidesOffsetBefore: 0, slidesOffsetAfter: 36 } },
     });
 
     initSingleSwiper('.swiper-event', {
         slidesPerView: 1.2, spaceBetween: 12, slidesOffsetBefore: 20, slidesOffsetAfter: 16,
         navigation: { nextEl: '.event-swiper-next', prevEl: '.event-swiper-prev' },
-        breakpoints: { 768: { slidesPerView: 'auto', spaceBetween: 16 }, 1024: { slidesPerView: 'auto', spaceBetween: 36, slidesOffsetBefore: 0, slidesOffsetAfter: 36 } },
+        breakpoints: { 768: { slidesPerView: 'auto', spaceBetween: 16 }, 1280: { slidesPerView: 'auto', spaceBetween: 36, slidesOffsetBefore: 0, slidesOffsetAfter: 36 } },
     });
 
     const thumbEl = document.querySelector('.goods-thumb');
@@ -169,73 +169,6 @@ function initPriceFormatter() {
 }
 
 // ----------------------------------------------------------------
-//     月×タグのフィルターを初期化する関数
-// ----------------------------------------------------------------
-/*
-function initEventFilter() {
-    console.log('initEventFilter: 初期化開始！'); // 追加
-    const filterContainer = document.querySelector('.event-filter');
-    const postsContainer = document.querySelector('.event-list');
-
-    if (!filterContainer || !postsContainer) {
-        console.warn('initEventFilter: フィルタリングコンテナまたは投稿コンテナが見つかりませんでした。'); // 変更
-        return;
-    }
-
-    let activeTag = 'all';
-    const monthFilterElement = filterContainer.querySelector('#month-filter');
-    let activeMonth = monthFilterElement?.value || 'all';
-
-    // Barba.js 遷移後、posts も新しい DOM から再取得されるようにする
-    const posts = postsContainer.querySelectorAll('.event-item');
-
-    const filterPosts = () => {
-        const currentMonth = monthFilterElement?.value || 'all';
-        const currentTag = activeTag;
-
-        posts.forEach(post => {
-            const postMonths = (post.dataset.months || '').split(',');
-            const postTags = (post.dataset.tags || '').split(',');
-
-            const matchesMonth = currentMonth === 'all' || postMonths.includes(currentMonth);
-            const matchesTag = currentTag === 'all' || postTags.includes(currentTag);
-
-            post.style.display = (matchesMonth && matchesTag) ? 'block' : 'none';
-        });
-        activeMonth = currentMonth;
-    };
-
-    // イベントリスナーの再登録（重複を防ぐ）
-    if (filterContainer._filterClickHandler) {
-        filterContainer.removeEventListener('click', filterContainer._filterClickHandler);
-    }
-    filterContainer._filterClickHandler = (e) => {
-        if (e.target.classList.contains('tag-link')) {
-            e.preventDefault();
-            filterContainer.querySelectorAll('.tag-link').forEach(link => link.classList.remove('active'));
-            e.target.classList.add('active');
-            activeTag = e.target.dataset.tag;
-            filterPosts();
-        }
-    };
-    filterContainer.addEventListener('click', filterContainer._filterClickHandler);
-
-    if (filterContainer._filterChangeHandler) {
-        filterContainer.removeEventListener('change', filterContainer._filterChangeHandler);
-    }
-    filterContainer._filterChangeHandler = (e) => {
-        if (e.target.id === 'month-filter') {
-            filterPosts();
-        }
-    };
-    filterContainer.addEventListener('change', filterContainer._filterChangeHandler);
-
-    filterPosts(); // 初回フィルター適用
-    console.log('initEventFilter: 初期化完了！'); // 追加
-}
-*/
-
-// ----------------------------------------------------------------
 //     top-page goodsアニメーション
 // ----------------------------------------------------------------
 function initTopPageGoodsAnimation() {
@@ -258,6 +191,23 @@ function initTopPageGoodsAnimation() {
 // ----------------------------------------------------------------
 function initParallax() {
     const applyParallax = () => {
+        const screenWidth = window.innerWidth;
+        const XL_BREAKPOINT = 1280; // Tailwind CSSのXLブレークポイントに合わせる
+
+        // 1280px未満の場合はすべてのパララックス効果を無効化
+        if (screenWidth < XL_BREAKPOINT) {
+            document.querySelectorAll('.parallax-small, .parallax, .parallax-2').forEach(element => {
+                element.style.transform = `translateY(0px)`; // 位置をリセット
+            });
+            const elemImg = document.getElementById('parallaxBgImg');
+            if (elemImg) {
+                elemImg.style.transform = `translateY(0px) scale(1.0)`; // 位置をリセット
+            }
+            return; // これ以上計算を実行しない
+        }
+
+        // --- 1280px以上の場合にのみ以下のパララックス効果が適用される ---
+
         document.querySelectorAll('.parallax-small').forEach(element => {
             const speed = 0.2;
             const offset = window.scrollY * speed - 600;
@@ -271,24 +221,27 @@ function initParallax() {
         });
 
         const parallaxElements2 = document.querySelectorAll('.parallax-2');
-        const screenWidth = window.innerWidth;
-        let baseOffset = screenWidth <= 768 ? 450 : 550;
+        // baseOffset の計算もXLブレークポイントに合わせるか検討
+        // 現在の768px基準は維持しても良いが、一貫性を持たせるならXL_BREAKPOINTを使う
+        let baseOffset = screenWidth <= 768 ? 450 : 550; // この行は現在のロジックを維持
 
         parallaxElements2.forEach(element => {
+            // ここも screenWidth > 767 のままで良い。
+            // 全体のif (screenWidth < XL_BREAKPOINT)で既に制御されているため
             if (screenWidth > 767) {
                 const offset = window.scrollY * 0.1 - baseOffset;
                 element.style.transform = `translateY(${offset}px)`;
             } else {
+                // ここは screenWidth < 768px の場合に translateY(0) になる
+                // 全体の XL_BREAKPOINT 条件でカバーされるが、既存ロジックとして残す
                 element.style.transform = `translateY(0px)`;
             }
         });
 
-        if (screenWidth > 767) {
-            const elemImg = document.getElementById('parallaxBgImg');
-            if (elemImg) {
-                const scrollOffset = window.scrollY / 10;
-                elemImg.style.transform = `translateY(${scrollOffset}px) scale(1.0)`;
-            }
+        const elemImg = document.getElementById('parallaxBgImg');
+        if (elemImg) {
+            const scrollOffset = window.scrollY / 10;
+            elemImg.style.transform = `translateY(${scrollOffset}px) scale(1.0)`;
         }
     };
 
@@ -303,14 +256,16 @@ function initParallax() {
         window.removeEventListener('resize', window._parallaxResizeHandler);
     }
     window._parallaxResizeHandler = () => {
-        const parallaxElements2 = document.querySelectorAll('.parallax-2');
-        const screenWidth = window.innerWidth;
-        parallaxElements2.forEach(element => {
-            if (screenWidth <= 767) {
-                element.style.transform = `translateY(0px)`;
-            }
+        // リサイズ時にすべてのパララックス要素をリセットしてから applyParallax を呼ぶ
+        document.querySelectorAll('.parallax-small, .parallax, .parallax-2').forEach(element => {
+            element.style.transform = `translateY(0px)`;
         });
-        applyParallax();
+        const elemImg = document.getElementById('parallaxBgImg');
+        if (elemImg) {
+            elemImg.style.transform = `translateY(0px) scale(1.0)`;
+        }
+
+        applyParallax(); // リサイズ後に再度適用条件をチェック
     };
     window.addEventListener('resize', window._parallaxResizeHandler);
 
@@ -390,9 +345,9 @@ function initHeaderDrawer(forcedNamespace = null) {
         homeDrawer.removeEventListener('click', homeDrawer._toggleClickHandler);
     }
     homeDrawer._toggleClickHandler = function (e) {
-        if (isTopPage) { // トップページでのみクリックイベントを処理
+        // if (isTopPage) { // トップページでのみクリックイベントを処理
             toggleDrawer(!drawerNav.classList.contains('is-active'));
-        }
+        // }
     };
     homeDrawer.addEventListener('click', homeDrawer._toggleClickHandler);
 
@@ -400,21 +355,24 @@ function initHeaderDrawer(forcedNamespace = null) {
     if (document._outsideClickHandler) {
         document.removeEventListener('click', document._outsideClickHandler);
     }
-    if (isTopPage) { // トップページでのみ適用
-        console.log('initHeaderDrawer: Outside click handler IS REGISTERED (Top page).');
-        document._outsideClickHandler = function (e) {
-            const isActive = drawerNav.classList.contains('is-active');
-            const isHomeDrawerClick = homeDrawer.contains(e.target);
-            const isDrawerNavClick = drawerNav.contains(e.target);
 
-            if (isActive && !isHomeDrawerClick && !isDrawerNavClick) {
-                toggleDrawer(false);
-            }
-        };
-        document.addEventListener('click', document._outsideClickHandler);
-    } else {
-        console.log('initHeaderDrawer: Outside click handler NOT REGISTERED (Subpage PC).');
-    }
+    // isTopPage の条件を削除し、常にイベントリスナーを登録する
+    console.log('initHeaderDrawer: Outside click handler IS REGISTERED (All pages).');
+    document._outsideClickHandler = function (e) {
+        const isActive = drawerNav.classList.contains('is-active');
+        const isHomeDrawerClick = homeDrawer.contains(e.target);
+        const isDrawerNavClick = drawerNav.contains(e.target);
+
+        // PCの下層ページの場合、メニューは常に開いている状態なので、
+        // エリア外クリックで閉じる処理は適用しない
+        const isMobile = window.innerWidth < 1280;
+        const isSubpagePC = !isTopPage && !isMobile;
+
+        if (isActive && !isHomeDrawerClick && !isDrawerNavClick && !isSubpagePC) {
+            toggleDrawer(false);
+        }
+    };
+    document.addEventListener('click', document._outsideClickHandler);
 
     // ドロワー内のリンクをクリックで閉じる処理 (トップページのみ、重複登録防止)
     drawerNav.querySelectorAll('a').forEach(link => {
@@ -422,7 +380,12 @@ function initHeaderDrawer(forcedNamespace = null) {
             link.removeEventListener('click', link._clickHandler);
         }
         link._clickHandler = function() {
-            if (isTopPage && drawerNav.classList.contains('is-active')) {
+            // 下層ページでもリンククリックで閉じるようにするが、
+            // PC下層ページでメニューが常に開いている場合は閉じないようにする
+            const isMobile = window.innerWidth < 1280;
+            const isSubpagePC = !isTopPage && !isMobile;
+
+            if (drawerNav.classList.contains('is-active') && !isSubpagePC) {
                 toggleDrawer(false);
             }
         };
@@ -440,7 +403,7 @@ function initHeaderDrawer(forcedNamespace = null) {
         }
 
         const handleVisibility = () => {
-            const isMobileCurrent = window.innerWidth < 768;
+            const isMobileCurrent = window.innerWidth < 1280;
 
             console.log('handleVisibility: isTopPage is:', isTopPage, 'isMobileCurrent is:', isMobileCurrent);
             console.log('handleVisibility: currentNamespace is:', currentNamespace);
@@ -588,11 +551,11 @@ function initAllScripts() {
     initEventFadeOnScroll();
     // initFilterScripts と initEventFilter は個別にBarba.jsのafterフックで制御するため、ここには含めない
     // ただし、Barba.jsを使わないフォールバックの場合はここに追加することも検討する
-    window.scrollTo(0, 0);
+    // window.scrollTo(0, 0);
 }
 
 // ----------------------------------------------------------------
-//     Barba.js 初期化 (関数定義)
+// Barba.js 初期化 (関数定義)
 // ----------------------------------------------------------------
 let barbaInitialized = false;
 function setupBarba() {
@@ -602,6 +565,14 @@ function setupBarba() {
     }
 
     console.log('setupBarba 関数が呼び出されました！');
+
+     // ★★★ ここに initialNamespaceForSetup の定義を移動しました！ ★★★
+    // Barba.js 初期化時に一度だけヘッダードロワーとフィルタースクリプトを初期化するために、
+    // 最初の名前空間をここで取得します。
+    const initialBarbaContainerForSetup = document.querySelector('[data-barba="container"]');
+    const initialNamespaceForSetup = initialBarbaContainerForSetup?.dataset.barbaNamespace || 'default';
+    console.log('setupBarba: initialNamespaceForSetup を次のように決定しました:', initialNamespaceForSetup);
+    // ★★★ ここまで移動 ★★★
 
     // Barba.js のデバッグモードを有効化
     barba.use({ debug: true });
@@ -613,13 +584,37 @@ function setupBarba() {
             { namespace: 'goods-archive' },
             { namespace: 'events-archive' },
             { namespace: 'news-page' },
-            { namespace: 'page' }
+
+            {
+                namespace: 'contact', // contact.php に対応
+                beforeEnter() { console.log('Entering contact page view.'); }
+            },
+            {
+                namespace: 'contact-confirm', // contact-confirm.php に対応
+                beforeEnter() { console.log('Entering contact-confirm page view.'); }
+            },
+            {
+                namespace: 'thanks', // thanks.php に対応
+                beforeEnter() { console.log('Entering thanks page view.'); }
+            },
+            { namespace: 'page' } // その他の一般的な固定ページ
         ],
         transitions: [{
             name: 'default-transition',
-            beforeEnter({ next }) {
-                console.log('--- Barba transition beforeEnter フックが実行されました！ ---');
-                contactForm7Run(next);
+            // leaveフックの前にメニューを非表示にする
+            beforeLeave({ current }) {
+                console.log('--- Barba transition beforeLeave フックが実行されました！ ---');
+                const prevDrawerNav = current.container.querySelector('.home-drawer-nav');
+                if (prevDrawerNav) {
+                    // 全てのページ遷移でメニューを確実に非表示にする
+                    // is-active クラスを削除し、必要であれば非表示にするスタイルを適用
+                    prevDrawerNav.classList.remove('is-active');
+                    // prevDrawerNav.style.transition = 'none';
+                    // prevDrawerNav.style.opacity = '0';
+                    // prevDrawerNav.style.visibility = 'hidden';
+                    // prevDrawerNav.style.pointerEvents = 'none';
+                    console.log('beforeLeave: prevDrawerNav を確実に非表示にしました。');
+                }
             },
             leave({ current }) {
                 return new Promise(resolve => {
@@ -644,6 +639,16 @@ function setupBarba() {
                     container.style.transition = 'opacity 0.1s ease-in';
                     container.style.opacity = '0';
 
+                    // enterフックの最初で、新しいページのメニュー要素を一旦隠す
+                    const nextDrawerNav = container.querySelector('.home-drawer-nav');
+                    if (nextDrawerNav) {
+                        // nextDrawerNav.style.transition = 'none';
+                        // nextDrawerNav.style.opacity = '0';
+                        // nextDrawerNav.style.visibility = 'hidden';
+                        // nextDrawerNav.style.pointerEvents = 'none';
+                        console.log('enter: nextDrawerNav を確実に非表示にしました。');
+                    }
+
                     requestAnimationFrame(() => {
                         container.style.opacity = '1';
                     });
@@ -659,27 +664,6 @@ function setupBarba() {
                     }, 150);
                 });
             },
-            before(data) {
-                console.log('--- Barba transition before フックが実行されました！ ---');
-                const prevDrawerNav = document.querySelector('.home-drawer-nav');
-
-                // 下層ページから下層ページへの遷移では is-active を維持し、それ以外は削除
-                if (prevDrawerNav) {
-                    const isPrevSubpage = data.current.namespace !== 'home';
-                    const isNextSubpage = data.next.namespace !== 'home';
-
-                    if (isPrevSubpage && isNextSubpage) {
-                        console.log('before: 下層ページ間遷移のため drawerNav の is-active を維持。');
-                        // 何もしない（is-active を維持）
-                    } else {
-                        prevDrawerNav.classList.remove('is-active');
-                        console.log('before: 非下層ページ間遷移のため drawerNav から is-active を削除。');
-                    }
-                }
-
-                window.scrollTo(0, 0);
-                document.body.classList.remove('loading');
-            },
             after(data) {
                 console.log('--- Barba transition after フックが実行されました！ ---');
                 console.log('次のページのnamespace:', data.next.namespace);
@@ -688,19 +672,24 @@ function setupBarba() {
                     const homeDrawerNav = document.querySelector('.home-drawer-nav');
                     const newNamespace = data.next.namespace;
 
-                    // ハンバーガーメニューの状態をnamespaceに基づいて設定
                     if (homeDrawerNav) {
+                        // homeDrawerNav.style.removeProperty('transition');
+                        // homeDrawerNav.style.opacity = '0';
+                        // homeDrawerNav.style.visibility = 'hidden';
+                        // homeDrawerNav.style.pointerEvents = 'none';
+
                         if (newNamespace === 'home') {
                             homeDrawerNav.classList.remove('is-active');
                             console.log('homeDrawerNav reset for home page (closed).');
                         } else {
-                            homeDrawerNav.classList.add('is-active');
-                            console.log('homeDrawerNav set to active for subpage.');
+                            // homeDrawerNav.classList.add('is-active'); // handleVisibilityでPC下層ではhiddenになる
+                            console.log('homeDrawerNav set to active for subpage, but initially hidden.');
                         }
                     }
 
                     // initHeaderDrawer を呼び出す
                     // DOMが完全に更新されるのを待つため、わずかな遅延を入れる
+                    // この遅延は、新しいDOMが準備され、initHeaderDrawerが安全に実行されるために必要
                     setTimeout(() => {
                         if (typeof initHeaderDrawer === 'function') {
                             initHeaderDrawer(newNamespace);
@@ -708,47 +697,74 @@ function setupBarba() {
                         } else {
                             console.warn('initHeaderDrawer 関数が定義されていません。');
                         }
+
+                        // initHeaderDrawerが完了した後、メニューの最終的な状態を適用
+                        // if (homeDrawerNav) {
+                        //     homeDrawerNav.style.removeProperty('opacity');
+                        //     homeDrawerNav.style.removeProperty('visibility');
+                        //     homeDrawerNav.style.removeProperty('pointer-events');
+                        //     console.log('Barba after hook: homeDrawerNav の opacity/visibility をリセットしました。');
+                        // }
+
+                        // contactForm7Run の呼び出し条件をより正確に
+                        if (newNamespace === 'contact' || newNamespace === 'contact-confirm' || newNamespace === 'thanks') {
+                            console.log(`Barba after hook: Calling contactForm7Run for ${newNamespace} page.`);
+                            contactForm7Run(data.next);
+                        } else if (newNamespace === 'page') {
+                            const hasWpcf7Form = data.next.container.querySelector('div.wpcf7 > form');
+                            if (hasWpcf7Form) {
+                                console.log('Barba after hook: Calling contactForm7Run for generic page with CF7 form.');
+                                contactForm7Run(data.next);
+                            }
+                        }
+
+                        // .footer-contact の表示制御
+                        const footerContact = data.next.container.querySelector('.footer-contact');
+                        if (footerContact) {
+                            if (newNamespace === 'contact' || newNamespace === 'contact-confirm' || newNamespace === 'thanks') {
+                                footerContact.style.display = 'none';
+                                console.log(`Barba after hook: .footer-contact を非表示にしました (${newNamespace}ページ).`);
+                            } else {
+                                footerContact.style.removeProperty('display');
+                                console.log(`Barba after hook: .footer-contact の表示をリセットしました (${newNamespace}ページ).`);
+                            }
+                        }
+
                     }, 50);
 
-                    // Works / Goods archive ページのフィルタリングを初期化
-                    if (newNamespace === 'works-archive' || newNamespace === 'goods-archive') {
-                        setTimeout(() => {
-                            if (typeof initFilterScripts === 'function') {
-                                initFilterScripts(newNamespace);
-                                console.log('Barba after hook: initFilterScripts called with namespace:', newNamespace);
-                            } else {
-                                console.warn('initFilterScripts 関数が定義されていません。');
-                            }
-                        }, 100);
-                    }
-
-                    // Events archive ページのフィルタリングを初期化
-                    if (newNamespace === 'events-archive') {
-                        setTimeout(() => {
-                            if (typeof initEventFilter === 'function') {
-                                initEventFilter(); // initEventFilter は namespace を引数にとらないため、引数なしで呼び出す
-                                console.log('Barba after hook: initEventFilter called for events-archive.');
-                            } else {
-                                console.warn('initEventFilter 関数が定義されていません。');
-                            }
-                        }, 100);
-                    }
-
-                    // その他の共通スクリプトを初期化
-                    // initAllScripts の中身が上記の個別初期化と重複しないように注意
-                    if (typeof initAllScripts === 'function') {
-                        initAllScripts();
-                        console.log('Barba after hook: initAllScripts called');
+                    // filter.js にある initFilterScripts を呼び出す
+                    if (typeof initFilterScripts === 'function') {
+                        initFilterScripts(newNamespace);
+                        console.log('Barba after hook: initFilterScripts (from filter.js) called with namespace:', newNamespace);
                     } else {
-                        console.warn('initAllScripts 関数が定義されていません。');
+                        console.warn('initFilterScripts 関数が定義されていません。filter.js が正しくロードされているか確認してください。');
                     }
 
-                    // body の data-page 属性を更新
-                    if (data.next.container) {
-                        const nextBarbaNamespace = data.next.container.dataset.barbaNamespace || 'default';
-                        document.body.setAttribute('data-page', nextBarbaNamespace);
-                        console.log('Body data-page attribute updated to:', nextBarbaNamespace);
+                    // Body data-page attribute update (元のコードから継続、`newNamespace` を使う)
+                    const nextBarbaNamespace = data.next.container.dataset.barbaNamespace || 'default';
+                    document.body.setAttribute('data-page', nextBarbaNamespace);
+                    console.log('Body data-page attribute updated to:', nextBarbaNamespace);
+
+
+                    // Top page video autoplay (元のコードから継続、`newNamespace` を使う)
+                    if (newNamespace === 'home') {
+                        const videoSection = document.querySelector('.js-autoplay-video-section');
+                        if (videoSection) {
+                            const videoElement = videoSection.querySelector('video');
+                            if (videoElement) {
+                                videoElement.play().then(() => {
+                                    console.log('Video started playing on home page.');
+                                }).catch(error => {
+                                    console.warn('Video play() failed:', error);
+                                });
+                            }
+                        }
                     }
+
+                    initAllScripts();
+
+                    window.scrollTo(0, 0);
+                    console.log('Barba after hook: window.scrollTo(0, 0) executed.');
 
                 } catch (error) {
                     console.error('Barba.js after hook でエラーが発生しました:', error);
@@ -756,7 +772,6 @@ function setupBarba() {
                 }
             },
         }],
-        // グローバルフック
         hooks: {
             before: (data) => {
                 console.log('--- Barba global before フックが実行されました！ ---');
@@ -769,8 +784,6 @@ function setupBarba() {
             },
             after: ({ next }) => {
                 console.log('--- Barba global after フックが実行されました！ ---');
-                // Contact Form 7 の動的ロード/再初期化が必要な場合
-                // wpcf7.dom_updated イベントをディスパッチすることで、CF7 が新しいDOMを認識する
                 if (typeof document.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
                     document.dispatchEvent(new CustomEvent('wpcf7.dom_updated'));
                     console.log('wpcf7.dom_updated イベントがディスパッチされました。');
@@ -781,66 +794,79 @@ function setupBarba() {
         },
     });
 
-    console.log('barba.init の呼び出しが完了しました！');
+    // ★★★ここから、ご指摘のコードブロックを再追加★★★
+    // 初回ロード時も、メニュー要素を確実に隠す初期化を行う
+    const initialDrawerNav = document.querySelector('.home-drawer-nav');
+    if (initialDrawerNav) {
+        // initialDrawerNav.classList.remove('is-active'); // これは残しておいても良いが、CSSで初期状態を管理するなら不要
+        // initialDrawerNav.style.transition = 'none'; // ★★★これを削除★★★
+        // initialDrawerNav.style.opacity = '0';          // ★★★これを削除★★★
+        // initialDrawerNav.style.visibility = 'hidden';  // ★★★これを削除★★★
+        // initialDrawerNav.style.pointerEvents = 'none'; // ★★★これを削除★★★
+    }
 
-    // Barba.js 初期化時に一度だけヘッダードロワーとフィルタースクリプトを初期化
-    // ここで initHeaderDrawer と initFilterScripts を呼び出すことで、
-    // 初回ページロード時の初期化を確実にする
-    console.log('setupBarba: Calling initHeaderDrawer for initial load.');
-    const initialBarbaContainerForSetup = document.querySelector('[data-barba="container"]');
-    const initialNamespaceForSetup = initialBarbaContainerForSetup?.dataset.barbaNamespace || 'default';
     initHeaderDrawer(initialNamespaceForSetup);
 
-    // 初回ロード時もフィルタリングスクリプトを呼び出す
-    if (initialNamespaceForSetup === 'works-archive' || initialNamespaceForSetup === 'goods-archive') {
-        if (typeof initFilterScripts === 'function') {
-            initFilterScripts(initialNamespaceForSetup);
-            console.log('setupBarba: initFilterScripts called for initial page load (works/goods).');
-        }
+    // initHeaderDrawerが完了した後、transitionをリセットし、CSSに制御を戻す
+    if (initialDrawerNav) {
+        setTimeout(() => {
+            // initialDrawerNav.style.removeProperty('transition'); // ★★★これを削除★★★
+            // initialDrawerNav.style.removeProperty('opacity');    // ★★★これを削除★★★
+            // initialDrawerNav.style.removeProperty('visibility'); // ★★★これを削除★★★
+            // initialDrawerNav.style.removeProperty('pointer-events'); // ★★★これを削除★★★
+            console.log('setupBarba: Initial drawerNav opacity/visibility/transition reset.');
+        }, 100);
     }
-    if (initialNamespaceForSetup === 'events-archive') {
-        if (typeof initEventFilter === 'function') {
-            initEventFilter();
-            console.log('setupBarba: initEventFilter called for initial page load (events).');
-        }
-    }
+    // ★★★ここまで再追加★★★
+
+    // console.log('barba.init の呼び出しが完了しました！');
+    barbaInitialized = true;
+    console.log('Barba.js が初期化されました。');
 }
-
-// ----------------------------------------------------------------
-// updateBodyClasses() 関数は削除またはコメントアウト
-// ----------------------------------------------------------------
-// function updateBodyClasses(barbaNamespace = null, nextHtmlString = null) { /* ... */ }
-
-// ----------------------------------------------------------------
-// barba.hooks.once() は Barba.js の初回ロード時に一度だけ実行される
-// ----------------------------------------------------------------
-barba.hooks.once(() => {
-    console.log('--- Barba once フックが実行されました！ (初回ページロード時) ---');
-    // setupBarba() 内で既にこれらの関数が呼び出されているため、基本的にはここでの重複呼び出しは不要です。
-    // ただし、特定の Barba.js ライフサイクルでしか実行されない処理がある場合はここに記述します。
-    // 現状のinitHeaderDrawerとinitFilterScriptsはsetupBarba()内で呼び出す方が適切です。
-});
-
 
 // ----------------------------------------------------------------
 //     DOMContentLoaded で一度だけ実行する処理
 // ----------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoadedイベント発火！');
 
-    // Barba.js が利用可能か確認し、初期化
-    if (typeof barba !== 'undefined') {
-        setupBarba(); // Barba.js の初期化を実行
-        console.log('DOMContentLoaded: Barba.js setup called.');
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded: ページが完全にロードされました。');
+    setupBarba(); // Barba.js の初期化
+
+    initAllScripts();
+
+    // 初回ロード時に filter.js の initFilterScripts を呼び出す
+    // Barba.js はまだ transition を実行していないため、data-barba-namespace を直接取得
+    const initialNamespace = document.querySelector('[data-barba="container"]')?.dataset.barbaNamespace;
+    if (initialNamespace && typeof initFilterScripts === 'function') {
+        initFilterScripts(initialNamespace);
+        console.log('DOMContentLoaded: initFilterScripts (from filter.js) called for initial page load with namespace:', initialNamespace);
     } else {
-        console.warn('Barba.js が見つかりませんでした。Barba.js なしのフォールバックモードで初期化します。');
-        // Barba.js が利用できない場合の通常の初期化
-        const initialNamespaceFallback = document.querySelector('[data-barba="container"]')?.dataset.barbaNamespace || 'default';
-        initHeaderDrawer(initialNamespaceFallback);
-        initFilterScripts(initialNamespaceFallback); // Barba.js を使用しない場合のみ呼び出す
-        initEventFilter(); // Barba.js を使用しない場合のみ呼び出す
-        initAllScripts();
-        contactForm7Run({ container: document }); // フルリロード時もContact Form 7を初期化
+        console.warn('DOMContentLoaded: initFilterScripts 関数が定義されていないか、初期namespaceが取得できませんでした。');
+    }
+
+    // 初回ロード時の .footer-contact 表示制御
+    // これは transition.after と同じロジックをここで実行
+    const initialFooterContact = document.querySelector('.footer-contact');
+    if (initialFooterContact) {
+        if (initialNamespace === 'contact' || initialNamespace === 'contact-confirm' || initialNamespace === 'thanks') {
+            initialFooterContact.style.display = 'none';
+            console.log(`DOMContentLoaded: Initial .footer-contact を非表示にしました (${initialNamespace}ページ).`);
+        } else {
+            initialFooterContact.style.removeProperty('display');
+            console.log(`DOMContentLoaded: Initial .footer-contact の表示をリセットしました (${initialNamespace}ページ).`);
+        }
+    }
+
+    // 初回ロード時のContact Form 7の初期化
+    if (initialNamespace === 'contact' || initialNamespace === 'contact-confirm' || initialNamespace === 'thanks') {
+        console.log(`DOMContentLoaded: Initial contactForm7Run called for ${initialNamespace} page.`);
+        contactForm7Run({ container: document });
+    } else if (initialNamespace === 'page') {
+        const hasWpcf7Form = document.querySelector('div.wpcf7 > form');
+        if (hasWpcf7Form) {
+            console.log('DOMContentLoaded: Initial contactForm7Run called for generic page with CF7 form.');
+            contactForm7Run({ container: document });
+        }
     }
 
     // Escapeキーでモーダルを閉じる処理 (documentレベルで一度だけ設定)

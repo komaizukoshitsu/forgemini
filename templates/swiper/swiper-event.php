@@ -45,12 +45,12 @@ $pickup_query = new WP_Query($query_args); // 変数名が 'pickup_query' なの
     <div class="swiper swiper-event">
         <div class="swiper-wrapper">
             <?php while ($pickup_query->have_posts()) : $pickup_query->the_post(); ?>
-                <div class="swiper-slide lg:w-75 max-w-153">
+                <div class="swiper-slide xl:w-75 max-w-153">
                     <?php
                     // event-image-with-text.php への引数は変更なしでOK
                     get_template_part('templates/event/event-image-with-text', null, array(
                         'text_position' => 'overlay',
-                        'mt_below' => 'mt-2 lg:mt-5',
+                        'mt_below' => 'mt-2 xl:mt-5',
                         'aspect_ratio' => 'aspect-[3/2]'
                     ));
                     ?>

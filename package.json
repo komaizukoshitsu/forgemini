@@ -1,5 +1,5 @@
 {
-  "name": "teraoka-natsumi",
+  "name": "forgemini",
   "version": "1.0.0",
   "main": "bs-config.js",
   "scripts": {
@@ -11,15 +11,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@tailwindcss/cli": "^4.1.4",
-    "@tailwindcss/postcss": "^4.1.4",
-    "browser-sync": "^3.0.4",
-    "concurrently": "^9.1.2",
-    "postcss": "^8.5.3"
-  },
-  "devDependencies": {
-    "autoprefixer": "^10.4.21"
-  }
+  "description": ""
 }

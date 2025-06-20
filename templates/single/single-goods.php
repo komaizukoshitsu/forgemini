@@ -7,21 +7,20 @@
                 <span class="absolute left-[5px] top-1/2 w-3 h-[10px] -translate-y-1/2 rotate-180 bg-[url('../image/view-more-icon.svg')] bg-center bg-no-repeat bg-contain transition-all duration-[250ms] ease-in-out group-hover:left-0"></span>
             </a>
         </div>
-        <article class="w-[90%] mx-auto xl:ml-[25%] xl:max-w-243 mt-5 lg:mt-10">
-            <div class="mt-5 lg:mt-[105px]">
-                <div class="flex flex-col lg:flex-row gap-6 lg:gap-18">
-                    <div class="lg:w-[55%]">
+        <article class="w-[90%] mx-auto xl:ml-[25%] xl:max-w-243 mt-5 xl:mt-10">
+            <div class="mt-5 xl:mt-[105px]">
+                <div class="flex flex-col xl:flex-row gap-6 xl:gap-18">
+                    <div class="xl:w-[55%]">
                         <div>
                             <?php get_template_part('templates/swiper/swiper-single-goods'); ?>
                         </div>
                     </div>
-                    <div class="lg:flex-1">
-                        <header class="space-y-2 lg:space-y-3">
+                    <div class="xl:flex-1">
+                        <header class="space-y-2 xl:space-y-3">
                             <?php get_template_part('templates/badge-new'); ?>
-                            <h1 class="text-lg lg:text-2xl font-medium tracking-[0.05em] leading-[1.4]"><?php the_title(); ?></h1>
-                            <div class="flex text-sm lg:text-base leading-[1.3] pb-4 lg:pb-8 border-b border-gray-300">
-                                <div class="tracking-[0.05em]" style="font-family: 'Open Sans', sans-serif;"><?php echo get_the_date(); ?></div>
-                                <div class="ml-2 lg:ml-3 pl-2 lg:pl-3 border-l border-[#D9D9D9]">
+                            <h1 class="text-lg xl:text-2xl font-medium tracking-[0.05em] leading-[1.4]"><?php the_title(); ?></h1>
+                            <div class="flex text-xs xl:text-base leading-[1.3] pb-4 xl:pb-8 border-b border-gray-300">
+                                <div class="">
                                     <?php
                                     // goods_category タクソノミーからタームを取得
                                     $categories = get_the_terms(get_the_ID(), 'goods_category');
@@ -38,22 +37,22 @@
                                 </div>
                             </div>
                         </header>
-                        <dl class="space-y-3 lg:space-y-4 mt-4 lg:mt-10">
+                        <dl class="space-y-3 xl:space-y-4 mt-4 xl:mt-10">
                             <div class="flex flex-row items-baseline leading-[1.4]">
-                                <dt class="text-xs lg:text-sm w-20 lg:w-25 flex-shrink-0">価格</dt>
-                                <dd class="flex-1 text-base lg:text-[20px] flex items-baseline gap-1">
+                                <dt class="text-xs xl:text-sm w-20 xl:w-25 flex-shrink-0">価格</dt>
+                                <dd class="flex-1 text-base xl:text-[20px] flex items-baseline gap-1">
                                     <div class="">¥</div>
                                     <div class="price leading-[1.4]" style="font-family: 'Open Sans', sans-serif;"><?php the_field('goods-price'); ?></div>
-                                    <div class="text-[10px] lg:text-xs">（税込）</div>
+                                    <div class="text-[10px] xl:text-xs">（税込）</div>
                                 </dd>
                             </div>
                             <div class="flex flex-row items-baseline">
-                                <dt class="text-xs lg:text-sm w-20 lg:w-25 flex-shrink-0">詳細</dt>
-                                <dd class="flex-1 text-sm lg:text-base leading-[1.6]"><?php the_field('goods-detail'); ?></dd>
+                                <dt class="text-xs xl:text-sm w-20 xl:w-25 flex-shrink-0">詳細</dt>
+                                <dd class="flex-1 text-sm xl:text-base leading-[1.6]"><?php the_field('goods-detail'); ?></dd>
                             </div>
                             <div class="flex flex-row items-baseline">
-                                <dt class="text-xs lg:text-sm w-20 lg:w-25 flex-shrink-0">仕様</dt>
-                                <dd class="flex-1 text-sm lg:text-base leading-[1.6]"><?php the_field('goods-specification'); ?></dd>
+                                <dt class="text-xs xl:text-sm w-20 xl:w-25 flex-shrink-0">仕様</dt>
+                                <dd class="flex-1 text-sm xl:text-base leading-[1.6]"><?php the_field('goods-specification'); ?></dd>
                             </div>
                             <?php
                             // 販売店舗の取得と表示を store タクソノミーから行う
@@ -85,8 +84,8 @@
                             endif; // if ($stores ...) の終わり
                             ?>
                             <div class="flex flex-row items-baseline">
-                                <dt class="text-xs lg:text-sm w-20 lg:w-25 flex-shrink-0">取扱店舗</dt>
-                                <dd class="flex-1 text-sm lg:text-base leading-[1.4]">
+                                <dt class="text-xs xl:text-sm w-20 xl:w-25 flex-shrink-0">取扱店舗</dt>
+                                <dd class="flex-1 text-sm xl:text-base leading-[1.4]">
                                     <?php
                                     // 修正点2: 店舗名リストを表示。店舗がない場合は「取扱店舗なし」などのメッセージ
                                     if (!empty($store_names_output)) {
@@ -102,7 +101,7 @@
                         // 取得した全ての店舗に対してモーダルを読み込む
                         if (!empty($all_stores_data)) {
                             foreach ($all_stores_data as $store_data) {
-                                get_template_part('templates/modal/modal-content', null, [
+                                get_template_part('templates/modal/modal-content-shop', null, [
                                     'context' => 'shop',
                                     'store_name' => $store_data['name'],
                                     'modal_id_suffix' => $store_data['term_id'],
@@ -111,7 +110,7 @@
                             }
                         }
                         ?>
-                        <ul class="mt-7 lg:mt-10 tracking-wide list-disc py-4 lg:py-6 pl-[30px] lg:pl-[50px] pr-5 lg:pr-[30px] bg-[#F5F5F5] text-red-500 rounded-[10px] lg:rounded-[20px] text-xs lg:text-sm leading-[1.75]">
+                        <ul class="mt-7 xl:mt-10 tracking-wide list-disc py-4 xl:py-6 pl-[30px] xl:pl-[50px] pr-5 xl:pr-[30px] bg-[#F5F5F5] text-red-500 rounded-[10px] xl:rounded-[20px] text-xs xl:text-sm leading-[1.75]">
                             <li>表示されている価格は情報更新日時点のものです。実際の価格とは異なる場合があります。</li>
                             <li>実際の価格や送料等については、販売サイトにてご確認ください。</li>
                         </ul>
@@ -135,8 +134,8 @@
             </div>
             <?php get_template_part( 'templates/parts/single-footer' ); ?>
         </article>
-        <aside class="w-full mx-auto xl:max-w-180 mt-15 lg:mt-[150px]">
-            <div class="flex justify-between px-[5%] lg:px-0">
+        <aside class="w-full mx-auto xl:max-w-180 mt-15 xl:mt-[150px]">
+            <div class="flex justify-between px-[5%] xl:px-0">
                 <?php
                 get_template_part('templates/heading/heading-with-brackets', null, [
                     'heading_text' => 'グッズ',

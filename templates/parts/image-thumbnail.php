@@ -30,7 +30,7 @@
 
     // 引数として渡されたアスペクト比と角丸クラスを使用、なければデフォルト値を設定
     $aspect_ratio = $args['aspect_ratio'] ?? 'aspect-square';
-    $rounded_class = $args['rounded'] ?? 'rounded-[10px] lg:rounded-[20px]';
+    $rounded_class = $args['rounded'] ?? 'rounded-[10px] xl:rounded-[20px]';
 ?>
 
 <div class="group overflow-hidden <?php echo esc_attr($rounded_class); ?> <?php echo esc_attr($aspect_ratio); ?>">

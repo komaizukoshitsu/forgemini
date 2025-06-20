@@ -39,6 +39,17 @@ if (is_post_type_archive() && !empty($current_post_type)) {
 elseif (is_front_page()) {
     $barba_namespace = 'home';
 }
+// 特定の固定ページ (スラッグで指定)
+// お問い合わせ関連のページをここで明示的に指定します
+elseif (is_page('contact')) { // 'contact' というスラッグの固定ページの場合
+  $barba_namespace = 'contact';
+}
+elseif (is_page('contact-confirm')) { // 'contact-confirm' というスラッグの固定ページの場合
+  $barba_namespace = 'contact-confirm';
+}
+elseif (is_page('thanks')) { // 'thanks' というスラッグの固定ページの場合
+  $barba_namespace = 'thanks';
+}
 // 特定の固定ページ (例: page-news.php が 'news' というスラッグの固定ページの場合)
 // もし 'page-news' がカスタム投稿タイプ 'news' のアーカイブであれば、上記の is_post_type_archive() で処理されます。
 // ここでは、特定の固定ページのスラッグで名前空間を制御したい場合を想定。
@@ -78,7 +89,7 @@ else {
   <?php endif; ?> -->
 
   <?php if (wp_is_mobile()) : ?>
-    <div class="lg:hidden flex justify-center items-start mt-5">
+    <div class="xl:hidden flex justify-center items-start mt-5">
       <?php if (is_front_page()) : ?>
         <h1 class="block w-auto h-6">
           <a href="<?php bloginfo('url'); ?>" class="block w-auto h-full">

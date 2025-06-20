@@ -1,5 +1,5 @@
 <?php
-// templates/item-contents/item-content-post.php (と仮定)
+// templates/item-contents/item-content-news.php
 
 // 新着バッジは従来通り
 ob_start();
@@ -22,23 +22,22 @@ if ($is_pickup_post) {
 ?>
 
 <?php if (!empty($badge_new) || !empty($badge_pickup)) : ?>
-    <div class="flex gap-1 lg:gap-2 h-5 lg:h-6 items-center">
+    <div class="flex gap-1 xl:gap-2 h-5 xl:h-6 items-center">
         <?= $badge_new; ?>
         <?= $badge_pickup; ?>
     </div>
 <?php endif; ?>
 
-<div class="text-sm lg:text-base leading-[1.4]">
+<div class="text-sm xl:text-base leading-[1.4]">
     <?php the_title(); ?>
 </div>
 
-<div class="flex text-[10px] lg:text-xs leading-[1.3]">
+<div class="flex text-[10px] xl:text-xs leading-[1.3]">
     <div class="tracking-[0.05em]" style="font-family: 'Open Sans', sans-serif;">
         <?php echo get_the_date(); ?>
     </div>
-    <div class="ml-2 lg:ml-3 pl-2 lg:pl-3 border-l border-[#D9D9D9] border-solid">
+    <!-- <div class="ml-2 xl:ml-3 pl-2 xl:pl-3 border-l border-[#D9D9D9] border-solid">
         <?php
-        // 通常投稿のタグは 'post_tag' タクソノミーを使うのでそちらを取得
         $tags = get_the_terms(get_the_ID(), 'post_tag');
         if ($tags && !is_wp_error($tags)) {
             foreach ($tags as $tag) {
@@ -46,5 +45,5 @@ if ($is_pickup_post) {
             }
         }
         ?>
-    </div>
+    </div> -->
 </div>

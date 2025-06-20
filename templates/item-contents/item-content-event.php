@@ -6,12 +6,12 @@
  */
 ?>
 
-<div class="flex flex-col items-start lg:flex-row lg:items-center gap-1 lg:gap-2">
+<div class="flex flex-col items-start xl:flex-row xl:items-center gap-1 xl:gap-2">
     <?php get_template_part('templates/event/event-status'); ?>
     <?php get_template_part('templates/event/event-date-range'); ?>
 </div>
-<div class="schedule-item-title text-sm lg:text-base leading-[1.4]"><?php the_title(); ?></div>
-<div class="flex items-center text-[10px] lg:text-xs leading-[1.3]">
+<div class="schedule-item-title text-sm xl:text-base leading-[1.4]"><?php the_title(); ?></div>
+<div class="flex items-center text-[10px] xl:text-xs leading-[1.3]">
     <?php
     // 会場情報の取得と表示
     $venue_output = '';
@@ -54,7 +54,7 @@
     // ★ここから修正
     // if (!empty($event_types_output)) : を削除
     ?>
-    <div class="ml-2 lg:ml-3 pl-2 lg:pl-3 border-l border-gray-300">
+    <div class="ml-2 xl:ml-3 pl-2 xl:pl-3 border-l border-gray-300">
         <?php echo $event_types_output; ?>
     </div>
     <?php

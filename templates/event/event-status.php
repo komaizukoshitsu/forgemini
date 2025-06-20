@@ -16,7 +16,7 @@ $bg_class = 'bg-[#FFF546]'; // デフォルト黄色
 // 判定ロジック
 if ($end_timestamp) {
     if ($today_timestamp >= $start_timestamp && $today_timestamp <= $end_timestamp) {
-        $status = 'ただいま開催中';
+        $status = '開催中';
     } elseif ($today_timestamp < $start_timestamp) {
         $status = '開催予定';
         $bg_class = 'bg-[#FFFAD1]'; // グレー背景
@@ -28,7 +28,7 @@ if ($end_timestamp) {
     if ($today_timestamp < $start_timestamp) {
         $status = '開催予定';
     } elseif ($today_timestamp == $start_timestamp) {
-        $status = 'ただいま開催中';
+        $status = '開催中';
     } else {
         $status = '開催終了';
         $bg_class = 'bg-[#DADADA]';

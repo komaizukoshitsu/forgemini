@@ -2,8 +2,8 @@
 // templates/event/event-image-with-text.php
 
 $position = $args['text_position'] ?? 'below';
-$rounded_class = $args['rounded'] ?? 'rounded-[10px] lg:rounded-[20px]';
-$mt_below_class = $args['mt_below'] ?? 'mt-4 lg:mt-5';
+$rounded_class = $args['rounded'] ?? 'rounded-[10px] xl:rounded-[20px]';
+$mt_below_class = $args['mt_below'] ?? 'mt-4 xl:mt-5';
 $aspect_ratio = $args['aspect_ratio'] ?? 'aspect-square'; // デフォルトのアスペクト比
 
 // archive-event.php から渡されることを想定
@@ -31,8 +31,8 @@ $template_name = ($template_context === 'top') ? 'top' : $event_category_slug;
             </div>
 
             <?php if ($position === 'overlay') : ?>
-                <div class="hidden lg:flex absolute inset-0 flex-col justify-end p-4 lg:p-8 text-white transition-opacity duration-250 bg-gradient-to-b from-black/10 to-black/40 opacity-0 group-hover:opacity-100">
-                    <div class="translate-y-4 opacity-0 transition-all duration-250 group-hover:translate-y-0 group-hover:opacity-100 flex flex-col lg:justify-end lg:items-baseline gap-1 lg:gap-2">
+                <div class="hidden xl:flex absolute inset-0 flex-col justify-end p-4 xl:p-8 text-white transition-opacity duration-250 bg-gradient-to-b from-black/10 to-black/40 opacity-0 group-hover:opacity-100">
+                    <div class="translate-y-4 opacity-0 transition-all duration-250 group-hover:translate-y-0 group-hover:opacity-100 flex flex-col xl:justify-end xl:items-baseline gap-1 xl:gap-2">
                         <?php
                         // ★修正点2: item-content-event に template_name を渡す (もし必要なら)
                         get_template_part('templates/item-contents/item-content-event', null, ['template_name' => $template_name]);
@@ -44,10 +44,10 @@ $template_name = ($template_context === 'top') ? 'top' : $event_category_slug;
 
         <div class="
             <?php echo esc_attr($mt_below_class); ?>
-            px-[5%] lg:px-0 flex flex-col items-baseline gap-1 lg:gap-2
+            px-[5%] xl:px-0 flex flex-col items-baseline gap-1 xl:gap-2
             <?php
             if ($position === 'overlay') {
-                echo 'block lg:hidden'; // overlayならスマホだけ表示
+                echo 'block xl:hidden'; // overlayならスマホだけ表示
             } elseif ($position === 'below') {
                 echo 'block'; // belowなら常に表示
             }

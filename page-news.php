@@ -23,14 +23,13 @@ get_header();
     </div>
     <section class="w-full xl:ml-[25%] xl:w-[75%] mt-7 lg:mt-16">
         <?php
-        // お知らせのスライダーが不要ならこのセクションは削除
         get_template_part('templates/swiper/swiper-default', null, array(
-            'post_type_slug' => 'post' // 「お知らせ」の投稿タイプは 'post'
+            'post_type_slug' => 'post'
         ));
         ?>
     </section>
 
-    <section class="w-[90%] xl:w-[67.5%] mx-auto xl:ml-[25%] xl:max-w-275 mt-15 lg:mt-30">
+    <section class="w-full xl:w-[67.5%] mx-auto xl:ml-[25%] xl:max-w-275 mt-15 lg:mt-30">
         <div class="mb-5 lg:mb-6 px-[5%] lg:px-0">
             <?php
             get_template_part('templates/heading/heading-with-brackets', null, [
@@ -42,47 +41,70 @@ get_header();
 
         <div id="post-list">
             <?php
-            // ★ここが重要な変更点★
-            // 固定ページではメインクエリが使えないため、WP_Queryで投稿を取得します
-            $paged = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1;
+            // ★修正ここから★
+            // 'paged' の代わりにカスタムクエリ変数 'news_page' を使用
+            $news_current_page = (get_query_var('news_page')) ? get_query_var('news_page') : 1;
+
             $news_args = array(
-                'post_type'      => 'post',        // WordPressのデフォルト投稿タイプ
-                'posts_per_page' => 10,            // 1ページに表示するお知らせの数
+                'post_type'      => 'post',
+                'posts_per_page' => 10,
                 'orderby'        => 'date',
                 'order'          => 'DESC',
-                'paged'          => $paged,        // ページネーション対応
+                'paged'          => $news_current_page, // WP_Query には 'paged' を渡す
             );
             $news_query = new WP_Query( $news_args );
 
             if ( $news_query->have_posts() ) :
                 echo '<div class="grid grid-cols-2 lg:grid-cols-4 mt-5 lg:mt-15 gap-x-2 gap-y-6 lg:gap-x-9 lg:gap-y-15">';
                 while ( $news_query->have_posts() ) : $news_query->the_post();
-                    // ★修正点: template_context を 'news' に設定する ★
                     get_template_part('templates/parts/image-with-text', null, array(
                         'rounded'          => 'lg:rounded-[20px]',
                         'mt_below'         => 'mt-2 lg:mt-5',
-                        'template_context' => 'news' // ここで 'news' であることを伝える
+                        'template_context' => 'news'
                     ));
                 endwhile;
                 echo '</div>';
             else :
                 echo '<p class="mt-10 text-center text-sm text-gray-500">お知らせが見つかりませんでした。</p>';
             endif;
-
-            // ページネーション（$news_query に対応させる）
-            $big = 999999999; // need an unlikely integer
-            echo paginate_links( array(
-                'base'    => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
-                'format'  => '?paged=%#%',
-                'current' => max( 1, get_query_var('paged') ),
-                'total'   => $news_query->max_num_pages,
-                'type'    => 'list', // ul li 形式で出力
-                'prev_text' => '‹',
-                'next_text' => '›',
-            ) );
-
-            wp_reset_postdata(); // WP_Query を使った後は必ずリセット
+            wp_reset_postdata(); // これを忘れないでください。メインクエリをリセットします。
+            // ★修正ここまで★
             ?>
+        </div>
+        <div id="pagination-container">
+        <?php
+        // ★修正ここから★
+        // カスタムクエリである $news_query を使ってページネーションを生成
+        $big = 999999999;
+
+        // 現在の固定ページのパーマリンクを取得
+        $current_page_base_url = get_permalink();
+
+        // paginate_links を array タイプで実行
+        $paginate_links_array = paginate_links( array(
+            'base'         => add_query_arg( 'news_page', '%#%', esc_url( $current_page_base_url ) ),
+            'format'       => '?news_page=%#%',
+            'current'      => max( 1, $news_current_page ),
+            'total'        => $news_query->max_num_pages,
+            'prev_text'    => '&lt;', // 例: prev/next の表示を統一
+            'next_text'    => '&gt;', // 例: prev/next の表示を統一
+            'type'         => 'array', // ★ここを 'array' に変更★
+            'before_page_number' => '<span class="screen-reader-text">Page </span>'
+        ) );
+
+        // ページネーションリンクが存在する場合のみ ul タグを出力
+        if ( $paginate_links_array ) {
+            // ★ここに ul タグとカスタムクラスを追加★
+            echo '<ul class="pagination-list flex flex-wrap justify-center gap-2 mt-10 lg:mt-15">';
+            foreach ( $paginate_links_array as $link ) {
+                // WordPressが自動で付与する 'current' クラスを Tailwind の 'is-active' に変換 (任意)
+                $link = str_replace('page-numbers current', 'page-numbers is-active', $link);
+                // 個々の li にもクラスが必要であればここに追加
+                echo '<li class="pagination-item">' . $link . '</li>';
+            }
+            echo '</ul>';
+        }
+        ?>
         </div>
     </section>
 </main>

@@ -16,17 +16,17 @@ get_template_part('templates/event/event-date-range');
 $event_date_range = trim(ob_get_clean());
 ?>
 
-<article class="event-item pb-4 lg:pb-6 px-3 lg:px-4 border-b border-[#D9D9D9]" data-months="<?php echo esc_attr($months_str); ?>" data-tags="<?php echo esc_attr($tag_slugs); ?>">
-    <a href="<?php the_permalink(); ?>" class="flex items-center flex-col lg:flex-row gap-1 lg:gap-0">
-        <div class="left w-full lg:w-70 flex flex-col lg:flex-shrink-0 gap-1 lg:gap-2">
+<article class="event-item pb-4 xl:pb-6 px-3 xl:px-4 border-b border-[#D9D9D9]" data-months="<?php echo esc_attr($months_str); ?>" data-tags="<?php echo esc_attr($tag_slugs); ?>">
+    <a href="<?php the_permalink(); ?>" class="flex items-center flex-col xl:flex-row gap-1 xl:gap-0">
+        <div class="left w-full xl:w-70 flex flex-col xl:flex-shrink-0 gap-1 xl:gap-2">
             <?= $badge_status; ?>
             <?= $event_date_range; ?>
         </div>
-        <div class="right w-full flex flex-col lg:flex-1 gap-1 lg:gap-2">
-            <div class="schedule-item-title text-sm lg:text-base leading-[1.4]">
+        <div class="right w-full flex flex-col xl:flex-1 gap-1 xl:gap-2">
+            <div class="schedule-item-title text-sm xl:text-base leading-[1.4]">
                 <?php the_title(); ?>
             </div>
-            <div class="flex items-center text-[10px] lg:text-xs leading-[1.3]">
+            <div class="flex items-center text-[10px] xl:text-xs leading-[1.3]">
                 <div class="">
                 <?php
                     // カスタムタクソノミー 'event_venue' のタームを取得
@@ -52,7 +52,7 @@ $event_date_range = trim(ob_get_clean());
                     echo $event_venue_output; // 結果を出力
                 ?>
                 </div>
-                <div class="ml-2 lg:ml-3 pl-2 lg:pl-3 border-l border-[#D9D9D9] border-solid">
+                <div class="ml-2 xl:ml-3 pl-2 xl:pl-3 border-l border-[#D9D9D9] border-solid">
                 <?php
                     // カスタムタクソノミー 'event_type' からタームを取得
                     $event_types = get_the_terms(get_the_ID(), 'event_type');

@@ -56,7 +56,7 @@ if (!$post_type_slug || !$pickup_query->have_posts()) {
     <div class="swiper swiper-default">
         <div class="swiper-wrapper">
             <?php while ($pickup_query->have_posts()) : $pickup_query->the_post(); ?>
-                <div class="swiper-slide lg:w-75 max-w-153">
+                <div class="swiper-slide xl:w-75 max-w-153">
                     <?php
                     // 'works' と 'goods' には 'templates/parts/image-with-text.php' を使用
                     // 'events' には 'templates/event/event-image-with-text.php' を使用するよう条件分岐を追加
@@ -64,14 +64,14 @@ if (!$post_type_slug || !$pickup_query->have_posts()) {
                     if ($post_type_slug === 'events') {
                         get_template_part('templates/event/event-image-with-text', null, array(
                             'text_position' => 'overlay',
-                            'mt_below' => 'mt-2 lg:mt-5',
+                            'mt_below' => 'mt-2 xl:mt-5',
                             'aspect_ratio' => 'aspect-[3/2]',
                             // 'template_context' => 'events' は event-image-with-text 内部で処理されるはずなのでここでは省略
                         ));
                     } else {
                         get_template_part('templates/parts/image-with-text', null, array(
                             'text_position' => 'overlay',
-                            'mt_below' => 'mt-2 lg:mt-5',
+                            'mt_below' => 'mt-2 xl:mt-5',
                             'aspect_ratio' => 'aspect-[3/2]',
                             'template_context' => ($post_type_slug === 'post') ? 'news' : $post_type_slug // ★追加: 'post' なら 'news' を渡す
                         ));

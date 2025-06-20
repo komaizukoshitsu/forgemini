@@ -1,0 +1,10 @@
+# Package managers
+package-lock.json
+
+# Local development environment specific files
+.DS_Store
+
+# Theme specific - adjust as needed
+assets/.DS_Store
+assets/css/.DS_Store
+assets/css/custom/.DS_Store

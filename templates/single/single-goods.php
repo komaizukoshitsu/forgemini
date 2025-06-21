@@ -1,4 +1,4 @@
-<main data-barba="container" data-barba-namespace="single">
+<main data-barba="container" data-barba-namespace="goods-single">
     <div class="mt-17">
         <div class="w-[90%] mx-auto xl:ml-[25%] xl:max-w-243">
             <a href="<?php bloginfo('url'); ?>/goods"

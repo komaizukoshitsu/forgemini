@@ -321,6 +321,13 @@ img {
   animation: slide-left 20s linear infinite;
 }
 
+.parallax-bg,
+.parallax-small,
+.parallax,
+.parallax-2 {
+  will-change: transform;
+}
+
 .parallax-1-wrapper {
   aspect-ratio: 3 / 2;
 }
@@ -818,6 +825,11 @@ body[data-page="home"] .footer {
 .wpcf7-form .form input[type="text"],
 .wpcf7-form .form input[type="email"] {
   height: 44px;
+}
+
+.wpcf7-form .form textarea {
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
 
 @media screen and (max-width: 1279px) {

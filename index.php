@@ -51,24 +51,23 @@ $top_page_excluded_event_ids = [];
                                     <?php get_template_part('templates/event/event-status'); ?>
                                     <?php get_template_part('templates/event/event-date-range'); ?>
                                 </div>
-                                <div class="text-sm xl:text-base leading-[1.4] w-full border-b border-transparent transition-colors duration-200 group-hover:border-neutral-800">
-                                    <?php the_title(); ?>
+                                <div class="text-sm xl:text-base leading-[1.4] w-full relative"> <span class="bg-gradient-to-t from-neutral-800 to-neutral-800/0 bg-[length:100%_0px] bg-no-repeat bg-left-bottom transition-all duration-250 group-hover:bg-[length:100%_1px]">
+                                        <?php the_title(); ?>
+                                    </span>
                                 </div>
                                 <div class="flex items-center text-[10px] xl:text-xs leading-[1.3]">
                                     <p class="">
                                         <?php
-                                        // event_venue タクソノミーから会場名を取得
                                         $venues = get_the_terms(get_the_ID(), 'event_venue');
                                         if ($venues && !is_wp_error($venues)) {
                                             echo esc_html($venues[0]->name);
                                         } else {
-                                            echo '会場未定'; // または適切なデフォルト値
+                                            echo '会場未定';
                                         }
                                         ?>
                                     </p>
                                     <p class="ml-2 xl:ml-3 pl-2 xl:pl-3 border-l border-gray-300">
                                         <?php
-                                        // event_type タクソノミーからタームを取得
                                         $event_types = get_the_terms(get_the_ID(), 'event_type');
                                         if ($event_types && !is_wp_error($event_types)) {
                                             $output = [];
@@ -311,11 +310,10 @@ $top_page_excluded_event_ids = [];
 
             <section class="mt-30 xl:mt-60">
                 <?php
-                get_template_part('templates/swiper/swiper-default', null, array(
+                get_template_part('templates/swiper/swiper-home-works', null, array(
                     'post_type_slug' => 'works'
                 ));
                 ?>
-
             </section>
 
             <section class="top-news-about mt-15 xl:mt-75 py-15 xl:py-50 relative overflow-hidden xl:min-h-100">
@@ -362,14 +360,6 @@ $top_page_excluded_event_ids = [];
                                                         </div>
                                                         <div class="flex items-center text-[10px] xl:text-xs leading-[1.3]">
                                                             <div class="tracking-[0.05em]" style="font-family: 'Open Sans', sans-serif;"><?php echo get_the_date(); ?></div>
-                                                            <div class="ml-2 xl:ml-3 pl-2 xl:pl-3 border-l border-gray-300">
-                                                                <?php
-                                                                // カテゴリーとタグが削除されたため、この部分は表示しないか、
-                                                                // または別の情報（例: 投稿タイプ名など）を表示するように変更できます。
-                                                                // 例: 投稿タイプ名を表示する場合
-                                                                // echo '<span>お知らせ</span>';
-                                                                ?>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </a>

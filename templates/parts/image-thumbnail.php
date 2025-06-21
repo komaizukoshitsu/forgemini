@@ -34,5 +34,9 @@
 ?>
 
 <div class="group overflow-hidden <?php echo esc_attr($rounded_class); ?> <?php echo esc_attr($aspect_ratio); ?>">
-    <img src="<?php echo esc_url($img_url); ?>" alt="商品画像" class="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105" />
+    <img
+        src="<?php echo esc_url($img_url); ?>"
+        alt="商品画像"
+        class="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+        loading="lazy" />
 </div>

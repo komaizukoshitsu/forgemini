@@ -8,7 +8,7 @@
 get_header();
 ?>
 
-<main data-barba="container" data-barba-namespace="page-news">
+<main data-barba="container" data-barba-namespace="news-page">
     <div class="flex lg:flex-row justify-center lg:justify-between items-center lg:ml-[25%] lg:mr-[7.5%] mt-16">
         <div class="w-full lg:w-auto">
             <?php

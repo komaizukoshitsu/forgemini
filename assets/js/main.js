@@ -53,6 +53,7 @@ function initSwipers() {
         if (el) new Swiper(el, options);
     };
 
+    // 下層ページ (archive-*) で使用する
     initSingleSwiper('.swiper-default', {
         slidesPerView: 1.2, spaceBetween: 12, slidesOffsetBefore: 20, slidesOffsetAfter: 16,
         navigation: { nextEl: '.default-swiper-next', prevEl: '.default-swiper-prev' },
@@ -63,6 +64,26 @@ function initSwipers() {
         slidesPerView: 1.2, spaceBetween: 12, slidesOffsetBefore: 20, slidesOffsetAfter: 16,
         navigation: { nextEl: '.event-swiper-next', prevEl: '.event-swiper-prev' },
         breakpoints: { 768: { slidesPerView: 'auto', spaceBetween: 16 }, 1280: { slidesPerView: 'auto', spaceBetween: 36, slidesOffsetBefore: 0, slidesOffsetAfter: 36 } },
+    });
+
+    // ホームページ専用の .swiper-home の設定 (ループ・中央揃え)
+    initSingleSwiper('.swiper-home-works', { // ★ここを追加/変更★
+        slidesPerView: 1.2,
+        spaceBetween: 12,
+        // slidesOffsetBefore: 20,
+        // slidesOffsetAfter: 16,
+        loop: true,               // ★ ループ再生を有効にする
+        centeredSlides: true,     // ★ アクティブなスライドを中央に配置する
+        initialSlide: 0,          // ★ 最初のスライドから開始
+        navigation: { nextEl: '.default-swiper-next', prevEl: '.default-swiper-prev' },
+        breakpoints: {
+            1280: {
+                slidesPerView: 'auto',
+                spaceBetween: 36,
+                // slidesOffsetBefore: 0,
+                // slidesOffsetAfter: 36,
+            }
+        },
     });
 
     const thumbEl = document.querySelector('.goods-thumb');
@@ -190,6 +211,20 @@ function initTopPageGoodsAnimation() {
 //     top-page パララックス
 // ----------------------------------------------------------------
 function initParallax() {
+    // スロットリング関数
+    const throttle = (func, limit) => {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        }
+    };
+
     const applyParallax = () => {
         const screenWidth = window.innerWidth;
         const XL_BREAKPOINT = 1280; // Tailwind CSSのXLブレークポイントに合わせる
@@ -245,11 +280,15 @@ function initParallax() {
         }
     };
 
+    // スクロールイベントにスロットリングを適用 (例: 16msごとに実行)
+    const throttledParallax = throttle(applyParallax, 16); // 16msは概ね60fps
+
     // イベントリスナーの再登録（重複を防ぐ）
     if (document._parallaxScrollHandler) {
         document.removeEventListener('scroll', document._parallaxScrollHandler);
     }
-    document._parallaxScrollHandler = applyParallax;
+    // ★変更点★ スロットリングされた関数をイベントリスナーに登録
+    document._parallaxScrollHandler = throttledParallax;
     document.addEventListener('scroll', document._parallaxScrollHandler);
 
     if (window._parallaxResizeHandler) {
@@ -270,29 +309,6 @@ function initParallax() {
     window.addEventListener('resize', window._parallaxResizeHandler);
 
     applyParallax(); // 初期呼び出し
-}
-
-// ----------------------------------------------------------------
-//     ヘッダーナビのアクティブ状態を管理する関数
-// ----------------------------------------------------------------
-function initHeaderNavActive() {
-    const headerNav = document.querySelector('.header-nav');
-    if (!headerNav) return;
-
-    // イベントリスナーの再登録（重複を防ぐ）
-    if (headerNav._headerNavClickHandler) {
-        headerNav.removeEventListener('click', headerNav._headerNavClickHandler);
-    }
-    headerNav._headerNavClickHandler = function(e) {
-        if (e.target.classList.contains('header-nav-item') || e.target.closest('.header-nav-item')) {
-            const clickedItem = e.target.closest('.header-nav-item');
-            if (clickedItem) {
-                this.querySelectorAll('.header-nav-item a').forEach(item => item.classList.remove('active'));
-                clickedItem.querySelector('a')?.classList.add('active');
-            }
-        }
-    };
-    headerNav.addEventListener('click', headerNav._headerNavClickHandler);
 }
 
 // ----------------------------------------------------------------
@@ -327,11 +343,87 @@ function initHeaderDrawer(forcedNamespace = null) {
     const drawerNav = document.querySelector('.home-drawer-nav'); // ドロワーメニュー本体
     const bar1 = homeDrawer?.querySelector('.drawer-iconBar1');
     const bar2 = homeDrawer?.querySelector('.drawer-iconBar2');
+    // ★★★ ここにヘッダーナビのコンテナとリンクのセレクタを追加 ★★★
+    const headerNav = document.querySelector('.header-nav'); // .header-nav を取得
+    const headerNavLinks = headerNav ? headerNav.querySelectorAll('.header-nav-item a') : []; // .header-nav-item 内のすべての <a> 要素を取得
 
-    if (!homeDrawer || !drawerNav || !bar1 || !bar2) {
-        console.warn('initHeaderDrawer: Required elements (homeDrawer, drawerNav, bar1, bar2) not found.');
+    if (!homeDrawer || !drawerNav || !bar1 || !bar2 || !headerNav) {
+        console.warn('initHeaderDrawer: Required elements (homeDrawer, drawerNav, bar1, bar2, headerNav) not found.');
         return;
     }
+
+    // --- ここから新しいアクティブリンク設定ロジックを追加 ---
+    // 1. まず、すべてのアクティブクラスをリセットする
+    headerNavLinks.forEach(link => {
+        link.classList.remove('active'); // `active` クラスを削除
+    });
+
+    // 2. 現在のページの名前空間に基づいて、アクティブなリンクを設定する
+    //    link.href と currentNamespace (または window.location.pathname) を比較します
+    const currentPath = window.location.pathname; // 現在のページのパス
+
+    headerNavLinks.forEach(link => {
+        // const linkHref = link.getAttribute('href'); // リンクの href 属性
+        const linkHref = new URL(link.href).pathname; // ★修正: link.href からパス部分のみを取得★
+        // 例: "http://teraokanatsumicom.local/events" -> "/events"
+
+        let shouldBeActive = false;
+
+        // 【優先度の高い、厳密なマッチング】
+        // Home
+        if (currentNamespace === 'home' && (linkHref === '/' || linkHref === '/home/')) {
+            shouldBeActive = true;
+        }
+        // About (完全に一致する固定ページの場合)
+        // もし /about/ でBarba namespaceが 'page' なら
+        else if (currentNamespace === 'page' && linkHref === '/about/' && currentPath === '/about/') {
+             shouldBeActive = true;
+        }
+        // Contact (contact, contact-confirm, thanks のどれでも)
+        else if (['contact', 'contact-confirm', 'thanks'].includes(currentNamespace) && linkHref.startsWith('/contact')) {
+            shouldBeActive = true;
+        }
+
+        // 【アーカイブページと単一ページの両方をカバーするロジック】
+        // News (news-page と news-single の両方で /news/ をアクティブに)
+        else if (linkHref.startsWith('/news') && (currentNamespace === 'news-page' || currentNamespace === 'news-single')) {
+            shouldBeActive = true;
+        }
+        // Events (events-archive と events-single の両方で /events/ をアクティブに)
+        else if (linkHref.startsWith('/events') && (currentNamespace === 'events-archive' || currentNamespace === 'events-single')) {
+            shouldBeActive = true;
+        }
+        // Goods (goods-archive と goods-single の両方で /goods/ をアクティブに)
+        else if (linkHref.startsWith('/goods') && (currentNamespace === 'goods-archive' || currentNamespace === 'goods-single')) {
+            shouldBeActive = true;
+        }
+        // Works (works-archive と works-single の両方で /works/ をアクティブに)
+        else if (linkHref.startsWith('/works') && (currentNamespace === 'works-archive' || currentNamespace === 'works-single')) {
+            shouldBeActive = true;
+        }
+        // 【その他の汎用的な親パス判定】
+        // 上記の特定ロジックでカバーされない「/parent/child/」のようなケースで、
+        // 親の '/parent/' リンクをアクティブにしたい場合。
+        // ただし、Home ('/') や Contact ('/contact/') など、特定のルートページとは競合しないように注意。
+        // これらは上記の専用ルールで既に処理されていることを前提とします。
+        // 例: linkHref が '/' ではなく、かつ currentPath が linkHref で始まる場合
+        else if (linkHref !== '/' && currentPath.startsWith(linkHref) && linkHref.length > 1) { // linkHrefが単独の'/'ではないことを確認
+             // ただし、'page' 名前空間の特定の固定ページ（例: /about/）は、
+             // その子ページがある場合に限りこのロジックが適用されるか、
+             // もしくは完全に一致する時だけアクティブにしたい場合は注意。
+             // 例: /about/ は /about/ の時だけactive、/about/company/ ではactiveにしないならこのロジックは不要
+             // ここはサイトのナビゲーションの意図によって変わります。
+             // もし /about/ のリンクが /about/company/ でもアクティブになってほしいなら有効。
+             shouldBeActive = true;
+             console.log(`Fallback active: ${linkHref} as parent of ${currentPath}`);
+        }
+
+        if (shouldBeActive) {
+            link.classList.add('active'); // `active` クラスを付与
+            console.log(`Active link set: ${linkHref} for namespace: ${currentNamespace}`);
+        }
+    });
+    // --- ここまで新しいアクティブリンク設定ロジックを追加 ---
 
     const toggleDrawer = (isOpen) => {
         drawerNav.classList.toggle('is-active', isOpen);
@@ -536,6 +628,113 @@ function contactForm7Run(next) {
 }
 
 // ----------------------------------------------------------------
+// フッターナビゲーションリンクのイベントリスナー設定関数 (ここが良い位置です)
+// ----------------------------------------------------------------
+function setupFooterNavLinks() {
+    console.log('setupFooterNavLinks 関数が呼び出されました。');
+
+    // .footer クラス内の nav-item クラスを持つ要素内のリンクを取得 (menu-items.php で生成されるリンク)
+    const footerNavLinks = document.querySelectorAll('footer .nav-item a');
+    footerNavLinks.forEach(link => {
+        // 既にイベントリスナーが追加されていないかチェックするためのデータ属性
+        if (!link.dataset.barbaCustomListener) {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+
+                // Barbajs で処理すべき内部リンクかを判定
+                // target="_blank", #アンカー, mailto:, tel:, download, 外部URLは除外
+                if (
+                    href &&
+                    !href.startsWith('#') &&
+                    !href.startsWith('mailto:') &&
+                    !href.startsWith('tel:') &&
+                    this.target !== '_blank' &&
+                    !this.hasAttribute('download') &&
+                    href.includes(window.location.origin) // 同じドメイン内のリンクのみ
+                ) {
+                    e.preventDefault(); // デフォルトの遷移を阻止
+                    console.log('フッターナビリンクのクリックを Barbajs で処理:', href);
+                    try {
+                        barba.go(href).then(() => {
+                            console.log('Barbajs 遷移が正常に開始されました:', href);
+                        }).catch(error => {
+                            console.error('Barbajs 遷移の開始中にエラーが発生しました:', error);
+                            // エラーが発生した場合でも、念のためフルリロードに戻す
+                            window.location.href = href;
+                        });
+                    } catch (err) {
+                        console.error('barba.go() の呼び出し自体でエラーが発生しました:', err);
+                        // ここに到達した場合は、barbaオブジェクトが未定義か、致命的な初期化問題がある
+                        window.location.href = href; // フルリロードにフォールバック
+                    }
+                } else {
+                    console.log('フッターナビリンクを通常処理 (Barba.js対象外):', href);
+                }
+            });
+            link.dataset.barbaCustomListener = 'true'; // カスタムリスナーを追加したマーク
+        }
+    });
+
+    // フッターの「お問い合わせ」ボタン (.footer-contact a)
+    const footerContactLink = document.querySelector('footer .footer-contact a');
+    if (footerContactLink && !footerContactLink.dataset.barbaCustomListener) {
+        footerContactLink.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (
+                href &&
+                !href.startsWith('#') &&
+                !href.startsWith('mailto:') &&
+                !href.startsWith('tel:') &&
+                this.target !== '_blank' &&
+                !this.hasAttribute('download') &&
+                href.includes(window.location.origin)
+            ) {
+                e.preventDefault();
+                console.log('フッターお問い合わせリンクのクリックを Barbajs で処理:', href);
+                try { // ★ barba.go() に try...catch を追加
+                    barba.go(href);
+                } catch (err) {
+                    console.error('barba.go() の呼び出し自体でエラーが発生しました:', err);
+                    window.location.href = href;
+                }
+            } else {
+                console.log('フッターお問い合わせリンクを通常処理 (Barba.js対象外):', href);
+            }
+        });
+        footerContactLink.dataset.barbaCustomListener = 'true';
+    }
+
+    // プライバシーポリシーリンク (.footer-privacy-policy a)
+    const privacyPolicyLink = document.querySelector('footer .footer-privacy-policy a');
+    if (privacyPolicyLink && !privacyPolicyLink.dataset.barbaCustomListener) {
+        privacyPolicyLink.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (
+                href &&
+                !href.startsWith('#') &&
+                !href.startsWith('mailto:') &&
+                !href.startsWith('tel:') &&
+                this.target !== '_blank' &&
+                !this.hasAttribute('download') &&
+                href.includes(window.location.origin)
+            ) {
+                e.preventDefault();
+                console.log('プライバシーポリシーリンクのクリックを Barbajs で処理:', href);
+                try { // ★ barba.go() に try...catch を追加
+                    barba.go(href);
+                } catch (err) {
+                    console.error('barba.go() の呼び出し自体でエラーが発生しました:', err);
+                    window.location.href = href;
+                }
+            } else {
+                console.log('プライバシーポリシーリンクを通常処理 (Barba.js対象外):', href);
+            }
+        });
+        privacyPolicyLink.dataset.barbaCustomListener = 'true';
+    }
+}
+
+// ----------------------------------------------------------------
 //     すべてのスクリプトを再初期化する関数
 // ----------------------------------------------------------------
 function initAllScripts() {
@@ -546,7 +745,7 @@ function initAllScripts() {
     initPriceFormatter();
     initTopPageGoodsAnimation();
     initParallax();
-    initHeaderNavActive();
+    // initHeaderNavActive();
     initMvBlurOnScroll();
     initEventFadeOnScroll();
     // initFilterScripts と initEventFilter は個別にBarba.jsのafterフックで制御するため、ここには含めない
@@ -581,9 +780,13 @@ function setupBarba() {
         views: [
             { namespace: 'home' },
             { namespace: 'works-archive' },
+            { namespace: 'works-single' }, // ★追加: Worksの単一ページ
             { namespace: 'goods-archive' },
+            { namespace: 'goods-single' }, // ★追加: Goodsの単一ページ
             { namespace: 'events-archive' },
+            { namespace: 'events-single' }, // ★追加: Eventsの単一ページ
             { namespace: 'news-page' },
+            { namespace: 'news-single' }, // ★追加: Newsの単一ページ (もしあれば)
 
             {
                 namespace: 'contact', // contact.php に対応
@@ -609,10 +812,6 @@ function setupBarba() {
                     // 全てのページ遷移でメニューを確実に非表示にする
                     // is-active クラスを削除し、必要であれば非表示にするスタイルを適用
                     prevDrawerNav.classList.remove('is-active');
-                    // prevDrawerNav.style.transition = 'none';
-                    // prevDrawerNav.style.opacity = '0';
-                    // prevDrawerNav.style.visibility = 'hidden';
-                    // prevDrawerNav.style.pointerEvents = 'none';
                     console.log('beforeLeave: prevDrawerNav を確実に非表示にしました。');
                 }
             },
@@ -640,14 +839,10 @@ function setupBarba() {
                     container.style.opacity = '0';
 
                     // enterフックの最初で、新しいページのメニュー要素を一旦隠す
-                    const nextDrawerNav = container.querySelector('.home-drawer-nav');
-                    if (nextDrawerNav) {
-                        // nextDrawerNav.style.transition = 'none';
-                        // nextDrawerNav.style.opacity = '0';
-                        // nextDrawerNav.style.visibility = 'hidden';
-                        // nextDrawerNav.style.pointerEvents = 'none';
-                        console.log('enter: nextDrawerNav を確実に非表示にしました。');
-                    }
+                    // const nextDrawerNav = container.querySelector('.home-drawer-nav');
+                    // if (nextDrawerNav) {
+                    //     console.log('enter: nextDrawerNav を確実に非表示にしました。');
+                    // }
 
                     requestAnimationFrame(() => {
                         container.style.opacity = '1';
@@ -673,11 +868,6 @@ function setupBarba() {
                     const newNamespace = data.next.namespace;
 
                     if (homeDrawerNav) {
-                        // homeDrawerNav.style.removeProperty('transition');
-                        // homeDrawerNav.style.opacity = '0';
-                        // homeDrawerNav.style.visibility = 'hidden';
-                        // homeDrawerNav.style.pointerEvents = 'none';
-
                         if (newNamespace === 'home') {
                             homeDrawerNav.classList.remove('is-active');
                             console.log('homeDrawerNav reset for home page (closed).');
@@ -697,14 +887,6 @@ function setupBarba() {
                         } else {
                             console.warn('initHeaderDrawer 関数が定義されていません。');
                         }
-
-                        // initHeaderDrawerが完了した後、メニューの最終的な状態を適用
-                        // if (homeDrawerNav) {
-                        //     homeDrawerNav.style.removeProperty('opacity');
-                        //     homeDrawerNav.style.removeProperty('visibility');
-                        //     homeDrawerNav.style.removeProperty('pointer-events');
-                        //     console.log('Barba after hook: homeDrawerNav の opacity/visibility をリセットしました。');
-                        // }
 
                         // contactForm7Run の呼び出し条件をより正確に
                         if (newNamespace === 'contact' || newNamespace === 'contact-confirm' || newNamespace === 'thanks') {
@@ -790,34 +972,14 @@ function setupBarba() {
                 } else {
                     console.warn('CustomEvent または document.dispatchEvent がサポートされていません。wpcf7.dom_updated は発火できません。');
                 }
+
+                // Barba.js 遷移後にもフッターリンクのリスナーを再設定
+                setupFooterNavLinks(); // ★ここに追加
             }
         },
     });
 
-    // ★★★ここから、ご指摘のコードブロックを再追加★★★
-    // 初回ロード時も、メニュー要素を確実に隠す初期化を行う
-    const initialDrawerNav = document.querySelector('.home-drawer-nav');
-    if (initialDrawerNav) {
-        // initialDrawerNav.classList.remove('is-active'); // これは残しておいても良いが、CSSで初期状態を管理するなら不要
-        // initialDrawerNav.style.transition = 'none'; // ★★★これを削除★★★
-        // initialDrawerNav.style.opacity = '0';          // ★★★これを削除★★★
-        // initialDrawerNav.style.visibility = 'hidden';  // ★★★これを削除★★★
-        // initialDrawerNav.style.pointerEvents = 'none'; // ★★★これを削除★★★
-    }
-
     initHeaderDrawer(initialNamespaceForSetup);
-
-    // initHeaderDrawerが完了した後、transitionをリセットし、CSSに制御を戻す
-    if (initialDrawerNav) {
-        setTimeout(() => {
-            // initialDrawerNav.style.removeProperty('transition'); // ★★★これを削除★★★
-            // initialDrawerNav.style.removeProperty('opacity');    // ★★★これを削除★★★
-            // initialDrawerNav.style.removeProperty('visibility'); // ★★★これを削除★★★
-            // initialDrawerNav.style.removeProperty('pointer-events'); // ★★★これを削除★★★
-            console.log('setupBarba: Initial drawerNav opacity/visibility/transition reset.');
-        }, 100);
-    }
-    // ★★★ここまで再追加★★★
 
     // console.log('barba.init の呼び出しが完了しました！');
     barbaInitialized = true;
@@ -830,6 +992,14 @@ function setupBarba() {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded: ページが完全にロードされました。');
+
+    // Barbajs の初期状態ログ (デバッグ用なので残しておいてもOK)
+    console.log('DOMContentLoaded: barbaオブジェクトの初期状態:', typeof barba, barba);
+    if (typeof barba === 'object' && barba !== null) {
+        console.log('DOMContentLoaded: barba.go メソッドの存在:', typeof barba.go);
+        console.log('DOMContentLoaded: barba.init メソッドの存在:', typeof barba.init);
+    }
+
     setupBarba(); // Barba.js の初期化
 
     initAllScripts();

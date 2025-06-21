@@ -77,7 +77,7 @@ else {
     aria-live="polite">
   <?php wp_body_open(); ?>
 
-  <!-- <?php if ( is_front_page() ) : ?>
+  <?php if ( is_front_page() ) : ?>
     <div id="loader-white" class="fixed inset-0 bg-white z-[999] animate-fadeOutWhite"></div>
     <div class="fixed inset-0 flex items-center justify-center z-[1001] opacity-0 fade-in-out-custom">
       <img class="w-[20vw] h-auto md:w-40 md:h-[183px]" src="<?php echo get_template_directory_uri(); ?>/assets/image/icon-teraokanatsumi.svg" alt="てらおかなつみアイコン">
@@ -86,7 +86,7 @@ else {
     <div id="curtain" class="fixed inset-0 z-[1000] flex flex-col justify-end pointer-events-none">
       <div id="curtain-inner" class="w-full bg-[#FFFAD1] translate-y-full" style="height: 100vh;"></div>
     </div>
-  <?php endif; ?> -->
+  <?php endif; ?>
 
   <?php if (wp_is_mobile()) : ?>
     <div class="xl:hidden flex justify-center items-start mt-5">

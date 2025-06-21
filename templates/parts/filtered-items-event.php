@@ -17,14 +17,15 @@ $event_date_range = trim(ob_get_clean());
 ?>
 
 <article class="event-item pb-4 xl:pb-6 px-3 xl:px-4 border-b border-[#D9D9D9]" data-months="<?php echo esc_attr($months_str); ?>" data-tags="<?php echo esc_attr($tag_slugs); ?>">
-    <a href="<?php the_permalink(); ?>" class="flex items-center flex-col xl:flex-row gap-1 xl:gap-0">
+    <a href="<?php the_permalink(); ?>" class="group flex items-center flex-col xl:flex-row gap-1 xl:gap-0">
         <div class="left w-full xl:w-70 flex flex-col xl:flex-shrink-0 gap-1 xl:gap-2">
             <?= $badge_status; ?>
             <?= $event_date_range; ?>
         </div>
         <div class="right w-full flex flex-col xl:flex-1 gap-1 xl:gap-2">
-            <div class="schedule-item-title text-sm xl:text-base leading-[1.4]">
-                <?php the_title(); ?>
+            <div class="schedule-item-title text-sm xl:text-base leading-[1.4] relative"> <span class="bg-gradient-to-t from-neutral-800 to-neutral-800/0 bg-[length:100%_0px] bg-no-repeat bg-left-bottom transition-all duration-250 group-hover:bg-[length:100%_1px]">
+                    <?php the_title(); ?>
+                </span>
             </div>
             <div class="flex items-center text-[10px] xl:text-xs leading-[1.3]">
                 <div class="">
@@ -47,7 +48,7 @@ $event_date_range = trim(ob_get_clean());
                         }
                     } else {
                         // タクソノミーが設定されていない、または取得に失敗した場合
-                        $event_venue_output = '<span>場所未定</span>';
+                        $event_venue_output = '<span>場所未定</span></span>'; // 修正: 閉じspanが余分でした
                     }
                     echo $event_venue_output; // 結果を出力
                 ?>

@@ -5,13 +5,16 @@ $tag_slugs = get_query_var('tag_slugs', '');
 $style = $args['style'] ?? 'horizontal'; // デフォルトは horizontal
 ?>
 <article class="event-item pb-4 xl:pb-6 px-3 xl:px-4 border-b border-[#D9D9D9]" data-months="<?php echo esc_attr($months_str); ?>" data-tags="<?php echo esc_attr($tag_slugs); ?>">
-    <a href="<?php the_permalink(); ?>" class="flex items-center flex-col xl:flex-row gap-1 xl:gap-0">
+    <a href="<?php the_permalink(); ?>" class="group flex items-center flex-col xl:flex-row gap-1 xl:gap-0">
         <div class="left w-full xl:w-70 flex flex-col xl:flex-shrink-0 gap-1 xl:gap-2">
             <?php get_template_part('templates/event/event-status'); ?>
             <?php get_template_part('templates/event/event-date-range'); ?>
         </div>
         <div class="right w-full flex flex-col xl:flex-1 gap-1 xl:gap-2">
-            <div class="schedule-item-title text-sm xl:text-base leading-[1.4]"><?php the_title(); ?></div>
+            <div class="schedule-item-title text-sm xl:text-base leading-[1.4] relative"> <span class="bg-gradient-to-t from-neutral-800 to-neutral-800/0 bg-[length:100%_0px] bg-no-repeat bg-left-bottom transition-all duration-250 group-hover:bg-[length:100%_1px]">
+                    <?php the_title(); ?>
+                </span>
+            </div>
             <div class="flex items-center text-[10px] xl:text-xs leading-[1.3]">
                 <div class=""><?php the_field('event-place'); ?></div>
                 <div class="ml-2 xl:ml-3 pl-2 xl:pl-3 border-l border-gray-300">

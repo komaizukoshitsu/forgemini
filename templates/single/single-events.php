@@ -1,4 +1,4 @@
-<main data-barba="container" data-barba-namespace="single">
+<main data-barba="container" data-barba-namespace="events-single">
     <div class="mt-17">
         <div class="w-[90%] mx-auto xl:max-w-180">
             <a href="<?php bloginfo('url'); ?>/events"
